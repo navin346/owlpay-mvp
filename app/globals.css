@@ -37,3 +37,14 @@ h2 { @apply text-2xl font-semibold; }
     radial-gradient(500px 250px at bottom right, rgba(52,211,153,.20), transparent 60%);
   filter: blur(40px); z-index: -1; opacity: .9;
 }
+
+/* Soft dotted grid background for sections/pages */
+.bg-grid {
+  /* dots */
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 18px 18px;
+  /* light theme dot color */
+  color: rgba(0, 0, 0, 0.06);
+}
+/* darker dots in dark mode */
+.dark .bg-grid { color: rgba(255, 255, 255, 0.05); }
