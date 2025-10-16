@@ -1,34 +1,66 @@
-// components/Nav.tsx (keep this version)
 'use client'
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
 
-export default function Nav(){
-  const [theme, setTheme] = useState<'light'|'dark'>('dark')
-  useEffect(() => {
-    const t = (typeof window !== 'undefined' && (localStorage.getItem('theme') as 'light'|'dark')) || 'dark'
-    setTheme(t)
-  }, [])
-  function toggleTheme(){
-    const next = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
-    if (next === 'dark') document.documentElement.classList.add('dark')
-    else document.documentElement.classList.remove('dark')
-    localStorage.setItem('theme', next)
-  }
+import Link from 'next/link'
+import { useState } from 'react'
+
+export default function Nav() {
+  const [open, setOpen] = useState(false)
+
   return (
-    <div className="flex items-center justify-between py-4">
-      <Link href="/" className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-ocean flex items-center justify-center">🦉</div>
-        <span className="font-semibold tracking-tight">OwlPay</span>
-      </Link>
-      <div className="flex items-center gap-3 text-sm">
-        <button onClick={toggleTheme} className="btn-secondary px-3 py-2 rounded-xl">
-          {theme === 'dark' ? '🌞 Light' : '🌙 Dark'}
-        </button>
-        <Link href="/whitepaper" className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">Whitepaper</Link>
-        <Link href="/launch" className="btn-primary">Launch App</Link>
+    <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="font-semibold text-lg tracking-tight">
+        Owl<span className="text-brand-600">Pay</span>
       </div>
+
+      {/* Desktop */}
+      <div className="hidden md:flex items-center gap-6">
+        <Link
+          href="#"
+          className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
+        >
+          Home
+        </Link>
+        <Link
+          href="#"
+          className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
+        >
+          Whitepaper
+        </Link>
+        {/* build-safe placeholder for Launch */}
+        <Link href="#" className="btn-primary">
+          Launch App
+        </Link>
+      </div>
+
+      {/* Mobile */}
+      <div className="md:hidden">
+        <button
+          onClick={() => setOpen(!open)}
+          className="p-2 rounded-md border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300"
+        >
+          ☰
+        </button>
+      </div>
+
+      {open && (
+        <div className="absolute top-16 right-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg p-5 flex flex-col gap-3 md:hidden">
+          <Link
+            href="#"
+            className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
+          >
+            Home
+          </Link>
+          <Link
+            href="#"
+            className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
+          >
+            Whitepaper
+          </Link>
+          <Link href="#" className="btn-primary">
+            Launch App
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
