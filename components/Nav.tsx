@@ -7,13 +7,13 @@ export default function Nav() {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
+    <header className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
       <div className="font-semibold text-lg tracking-tight">
         Owl<span className="text-brand-600">Pay</span>
       </div>
 
-      {/* Desktop */}
-      <div className="hidden md:flex items-center gap-6">
+      {/* Desktop Menu */}
+      <nav className="hidden md:flex items-center gap-6">
         <Link
           href="#"
           className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
@@ -26,13 +26,15 @@ export default function Nav() {
         >
           Whitepaper
         </Link>
-        {/* build-safe placeholder for Launch */}
-        <Link href="#" className="btn-primary">
+        <Link
+          href="#"
+          className="btn-primary"
+        >
           Launch App
         </Link>
-      </div>
+      </nav>
 
-      {/* Mobile */}
+      {/* Mobile Toggle */}
       <div className="md:hidden">
         <button
           onClick={() => setOpen(!open)}
@@ -42,6 +44,7 @@ export default function Nav() {
         </button>
       </div>
 
+      {/* Mobile Drawer */}
       {open && (
         <div className="absolute top-16 right-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg p-5 flex flex-col gap-3 md:hidden">
           <Link
@@ -56,11 +59,14 @@ export default function Nav() {
           >
             Whitepaper
           </Link>
-          <Link href="#" className="btn-primary">
+          <Link
+            href="#"
+            className="btn-primary"
+          >
             Launch App
           </Link>
         </div>
       )}
-    </div>
+    </header>
   )
 }
