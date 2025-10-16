@@ -24,8 +24,9 @@ export default function Landing(){
           Permissioned flows with jurisdiction rules and rigorous KYC/AML.
         </p>
         <div className="flex items-center justify-center gap-3 mt-8">
-          <Link className="btn-primary" href="/launch">Launch App</Link>
-          <Link className="btn-secondary" href="/whitepaper">Read Whitepaper</Link>
+          {/* Temporarily safe links so Vercel builds even before /launch exists */}
+          <Link className="btn-primary" href="#">Launch App</Link>
+          <Link className="btn-secondary" href="#">Read Whitepaper</Link>
         </div>
       </section>
 
@@ -108,7 +109,7 @@ export default function Landing(){
 
       {/* FINAL CTA */}
       <section className="text-center my-14">
-        <Link className="btn-primary" href="/launch">Launch the demo</Link>
+        <Link className="btn-primary" href="#">Launch the demo</Link>
       </section>
 
       <Footer />
