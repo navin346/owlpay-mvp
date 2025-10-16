@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export default function Landing(){
   return (
-    <main className="halo">
+    <main className="halo bg-grid">
       <Nav />
 
       {/* HERO */}
