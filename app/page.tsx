@@ -16,65 +16,81 @@ export default function Landing() {
 
   return (
     <main
-      className={`min-h-screen transition-colors duration-500 ${
+      className={`min-h-screen transition-all duration-700 ${
         darkMode
-          ? 'bg-[#0b0b0f] text-white'
-          : 'bg-gradient-to-br from-white via-slate-50 to-gray-200 text-gray-900'
-      }`}
+          ? 'bg-[#050509] text-white'
+          : 'bg-gradient-to-br from-[#f5f6fa] via-[#e6ecff] to-[#f7f9ff] text-gray-900'
+      } font-[Inter,sans-serif]`}
     >
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-gray-800/50">
-        <h1 className="text-xl font-semibold tracking-tight">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 via-blue-400 to-teal-300">
+      <header
+        className={`flex items-center justify-between px-6 py-5 border-b ${
+          darkMode ? 'border-gray-800/50' : 'border-gray-300/40'
+        }`}
+      >
+        <h1 className="text-xl font-bold tracking-tight">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8b5cf6] via-[#4f46e5] to-[#06b6d4]">
             OwlPay
           </span>
         </h1>
         <div className="flex items-center gap-6">
-          <Link href="#" className="hover:text-purple-400">
+          <Link href="#" className="hover:text-[#8b5cf6] transition">
             Home
           </Link>
-          <Link href="#" className="hover:text-purple-400">
+          <Link href="#" className="hover:text-[#8b5cf6] transition">
             Whitepaper
           </Link>
           <Link
             href="#"
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full text-white font-semibold hover:scale-105 transition"
+            className="px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#06b6d4] rounded-full font-medium text-white shadow-md hover:shadow-[0_0_25px_-5px_#8b5cf6] transition"
           >
             Launch App
           </Link>
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="ml-3 p-2 rounded-md border border-gray-700 hover:bg-gray-800"
+            className={`ml-3 p-2 rounded-md ${
+              darkMode
+                ? 'border border-gray-700 hover:bg-gray-800'
+                : 'border border-gray-400 hover:bg-gray-200'
+            } transition`}
           >
             {darkMode ? '☀️' : '🌙'}
           </button>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="text-center mt-24 px-6">
-        <h1 className="text-5xl sm:text-6xl font-extrabold leading-tight tracking-tight">
-          Cross-border remittance,
-          <br />
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7c3aed] via-[#4f46e5] to-[#14b8a6]">
+      {/* Hero */}
+      <section className="text-center mt-20 px-6">
+        <h1 className="text-5xl sm:text-6xl font-extrabold leading-tight">
+          Cross-border remittance,{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8b5cf6] via-[#3b82f6] to-[#10b981]">
             fast, compliant & elegant
           </span>
         </h1>
-        <p className="max-w-2xl mx-auto mt-6 text-lg text-gray-400 dark:text-gray-300">
+        <p
+          className={`max-w-2xl mx-auto mt-6 text-lg ${
+            darkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}
+        >
           Move money between the US and India using stablecoins with KYC-gated
           flows and bank-linked ramps. Designed for speed, trust, and
           self-custody.
         </p>
+
         <div className="flex justify-center gap-4 mt-8">
           <Link
             href="#"
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 font-semibold hover:scale-105 transition"
+            className="px-6 py-3 rounded-full bg-gradient-to-r from-[#8b5cf6] via-[#6366f1] to-[#06b6d4] font-semibold hover:scale-105 hover:shadow-[0_0_20px_-5px_#7c3aed] transition"
           >
             Launch App
           </Link>
           <Link
             href="#"
-            className="px-6 py-3 rounded-full border border-gray-600 hover:border-purple-400 font-semibold transition"
+            className={`px-6 py-3 rounded-full font-semibold border ${
+              darkMode
+                ? 'border-gray-600 hover:border-[#8b5cf6]'
+                : 'border-gray-400 hover:border-[#6366f1]'
+            } transition`}
           >
             Read Whitepaper
           </Link>
@@ -114,12 +130,20 @@ export default function Landing() {
         ].map(({ title, points }) => (
           <div
             key={title}
-            className="rounded-2xl p-6 border border-gray-700 bg-gradient-to-br from-gray-900/70 to-gray-800/40 backdrop-blur-sm hover:shadow-[0_0_25px_-5px_#7c3aed] transition"
+            className={`rounded-2xl p-6 border backdrop-blur-xl transition ${
+              darkMode
+                ? 'border-gray-800 bg-[#0e0e12]/70 hover:shadow-[0_0_25px_-5px_#7c3aed]'
+                : 'border-gray-300 bg-white/60 hover:shadow-[0_0_20px_-5px_#6366f1]'
+            }`}
           >
-            <h3 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-300">
+            <h3 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-[#8b5cf6] to-[#10b981]">
               {title}
             </h3>
-            <ul className="mt-3 space-y-1 text-gray-300 text-sm">
+            <ul
+              className={`mt-3 space-y-1 ${
+                darkMode ? 'text-gray-400' : 'text-gray-700'
+              } text-sm`}
+            >
               {points.map((p) => (
                 <li key={p}>• {p}</li>
               ))}
@@ -142,12 +166,22 @@ export default function Landing() {
           ].map(([step, desc]) => (
             <div
               key={step}
-              className="p-5 rounded-2xl border border-gray-700 bg-gray-900/40 backdrop-blur-sm"
+              className={`p-5 rounded-2xl border backdrop-blur-xl ${
+                darkMode
+                  ? 'border-gray-800 bg-[#0e0e12]/70'
+                  : 'border-gray-300 bg-white/60'
+              }`}
             >
-              <div className="text-lg font-semibold mb-1 text-purple-400">
+              <div className="text-lg font-semibold mb-1 text-[#8b5cf6]">
                 {step}
               </div>
-              <p className="text-gray-300 text-sm">{desc}</p>
+              <p
+                className={`text-sm ${
+                  darkMode ? 'text-gray-400' : 'text-gray-700'
+                }`}
+              >
+                {desc}
+              </p>
             </div>
           ))}
         </div>
@@ -155,10 +189,14 @@ export default function Landing() {
 
       {/* Safety & Limits */}
       <section className="px-6 mt-24 max-w-5xl mx-auto text-center">
-        <h2 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-teal-300 to-blue-500">
+        <h2 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-[#10b981] to-[#3b82f6]">
           Safety & Limits
         </h2>
-        <ul className="mt-5 text-gray-300 space-y-2">
+        <ul
+          className={`mt-5 space-y-2 text-base ${
+            darkMode ? 'text-gray-300' : 'text-gray-700'
+          }`}
+        >
           <li>✅ First transfer capped at <b>$5</b> for safety</li>
           <li>💸 Daily limit up to <b>$10,000</b></li>
           <li>🔒 All transactions validated & irreversible</li>
@@ -170,14 +208,18 @@ export default function Landing() {
       <section className="text-center mt-24 mb-16">
         <Link
           href="#"
-          className="px-8 py-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full font-semibold text-white shadow-lg hover:scale-110 transition"
+          className="px-8 py-4 bg-gradient-to-r from-[#3b82f6] via-[#8b5cf6] to-[#ec4899] rounded-full font-semibold text-white shadow-lg hover:scale-110 transition"
         >
           🚀 Launch the Demo
         </Link>
       </section>
 
       {/* Footer */}
-      <footer className="text-center text-sm text-gray-500 pb-10">
+      <footer
+        className={`text-center text-sm pb-10 ${
+          darkMode ? 'text-gray-500' : 'text-gray-600'
+        }`}
+      >
         © 2025 OwlPay — Cross-border stablecoin remittance demo.
       </footer>
     </main>
