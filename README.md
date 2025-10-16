@@ -1,4 +1,4 @@
-# OwlPay MVP — Stripe-styled
+# OwlPay MVP
 Free demo MVP for US→India stablecoin remittances. Landing page + App flows.
 
 ## Dev
