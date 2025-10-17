@@ -1,26 +1,39 @@
-
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
-export default function OTP() {
-  const [otp, setOtp] = useState('')
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+
+export default function OtpPage() {
   const router = useRouter()
+  const [otp, setOtp] = useState('')
+
+  const handleVerify = () => {
+    if (otp === '1234') {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      router.push('/launch/kyc')
+    } else {
+      alert('Invalid OTP. Try 1234 for demo.')
+    }
+  }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white">
-      <h2 className="text-3xl font-bold mb-4">Verify OTP</h2>
-      <p className="text-gray-400 mb-6">Enter the 6-digit code sent to your phone</p>
+      <h1 className="text-3xl font-bold mb-4">Verify OTP</h1>
+      <p className="text-gray-400 mb-6">Enter the 4-digit OTP sent to your phone.</p>
+
       <input
         type="text"
+        maxLength={4}
         value={otp}
         onChange={(e) => setOtp(e.target.value)}
-        placeholder="123456"
-        className="px-4 py-3 rounded-md bg-gray-800 border border-gray-700 w-48 text-center"
+        placeholder="1234"
+        className="w-32 text-center text-2xl p-2 rounded-md border border-gray-600 bg-black text-white"
       />
+
       <button
-        onClick={() => router.push('/launch/kyc')}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full font-semibold hover:scale-105 transition"
+        onClick={handleVerify}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full font-semibold hover:scale-105 transition"
       >
         Verify
       </button>
