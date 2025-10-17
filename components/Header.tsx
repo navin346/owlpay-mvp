@@ -1,22 +1,22 @@
-'use client'
-import { clearProfile, getProfile } from '@/app/lib/store'
-import { useRouter } from 'next/navigation'
+'use client';
+import Link from 'next/link';
 
-export default function Header(){
-  const router = useRouter()
-  const p = getProfile()
+export default function Header({ title = 'OwlPay Wallet' }: { title?: string }) {
   return (
-    <div className="flex items-center justify-between py-2">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-blue-500 flex items-center justify-center">🦉</div>
-        <div className="text-xl font-semibold">OwlPay</div>
-      </div>
-      <div className="flex items-center gap-3 text-sm text-zinc-400">
-        {p?.phone && <span>📱 {p.phone}</span>}
-        <button onClick={()=>{ clearProfile(); router.push('/start') }} className="btn-secondary px-3 py-2 rounded-xl">
-          Log out
-        </button>
+    <div className="w-full border-b border-zinc-200/60 dark:border-zinc-800/60 bg-white/80 dark:bg-black/40 backdrop-blur-md">
+      <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
+        <Link href="/launch" className="font-semibold">
+          {title}
+        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/launch" className="text-sm text-zinc-600 dark:text-zinc-300 hover:underline">
+            Dashboard
+          </Link>
+          <Link href="/" className="text-sm text-zinc-600 dark:text-zinc-300 hover:underline">
+            Website
+          </Link>
+        </div>
       </div>
     </div>
-  )
+  );
 }
