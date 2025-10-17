@@ -2,10 +2,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function SignupPage() {
-  const router = useRouter()
   const [mobile, setMobile] = useState('')
   const [country, setCountry] = useState('+91')
 
@@ -14,7 +12,7 @@ export default function SignupPage() {
       alert('Enter your phone number.')
       return
     }
-    router.push('/launch/otp')
+    window.location.href = '/launch/otp'
   }
 
   return (
