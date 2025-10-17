@@ -1,34 +1,28 @@
-
 'use client'
+
 import { useRouter } from 'next/navigation'
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const router = useRouter()
+
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white flex flex-col items-center py-16">
-      <h1 className="text-4xl font-bold mb-4">Welcome to OwlPay</h1>
-      <p className="text-gray-400 mb-8">Your KYC is approved ✅</p>
-      <div className="grid md:grid-cols-3 gap-6 w-11/12 max-w-4xl">
-        <div className="p-6 rounded-2xl bg-gray-900/70 border border-gray-800 text-center">
-          <h3 className="text-xl font-semibold mb-2 text-purple-400">Balance</h3>
-          <p className="text-2xl font-bold">$2,450 USDC</p>
-        </div>
-        <div className="p-6 rounded-2xl bg-gray-900/70 border border-gray-800 text-center">
-          <h3 className="text-xl font-semibold mb-2 text-blue-400">Recent Transfers</h3>
-          <p className="text-gray-400">2 transfers to INR wallets</p>
-        </div>
-        <div className="p-6 rounded-2xl bg-gray-900/70 border border-gray-800 text-center">
-          <h3 className="text-xl font-semibold mb-2 text-teal-400">Limit</h3>
-          <p className="text-gray-400">$10,000/day remaining</p>
+    <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white">
+      <h1 className="text-3xl font-bold mb-2">Welcome to OwlPay Wallet</h1>
+      <p className="text-gray-400 mb-8">Your demo KYC is verified ✅</p>
+
+      <div className="bg-[#141414] rounded-2xl p-6 shadow-lg w-80 text-center">
+        <h2 className="text-2xl font-semibold mb-2">Balance</h2>
+        <p className="text-4xl font-bold mb-6">$10,800.00</p>
+
+        <div className="flex flex-col gap-3">
+          {/* @ts-ignore */}
+          <button onClick={() => router.push('/launch/send')} className="bg-gradient-to-r from-purple-500 to-blue-500 py-2 rounded-lg font-semibold">
+            Send
+          </button>
+          <button className="bg-gray-700 py-2 rounded-lg font-semibold">Deposit</button>
+          <button className="bg-gray-700 py-2 rounded-lg font-semibold">Withdraw</button>
         </div>
       </div>
-
-      <button
-        onClick={() => router.push('/launch/send')}
-        className="mt-12 px-8 py-4 bg-gradient-to-r from-blue-500 to-teal-400 rounded-full font-semibold hover:scale-110 transition"
-      >
-        Send Money →
-      </button>
     </main>
   )
 }
