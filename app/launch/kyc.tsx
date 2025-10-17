@@ -2,10 +2,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function KycPage() {
-  const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -22,7 +20,7 @@ export default function KycPage() {
     setTimeout(() => {
       setLoading(false)
       alert('KYC verified successfully ✅')
-      router.push('/launch/dashboard')
+      window.location.href = '/launch/dashboard'
     }, 1600)
   }
 
