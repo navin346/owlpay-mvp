@@ -1,28 +1,45 @@
-
 'use client'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function Signup() {
-  const [phone, setPhone] = useState('')
+export default function SignupPage() {
   const router = useRouter()
+  const [mobile, setMobile] = useState('')
+  const [country, setCountry] = useState('+91')
+
+  const handleContinue = () => {
+    if (!mobile) return alert('Enter your phone number')
+    // @ts-ignore
+    router.push('/launch/otp')
+  }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white">
-      <h2 className="text-3xl font-bold mb-4">Sign Up</h2>
-      <p className="text-gray-400 mb-6">Enter your mobile number (US/India)</p>
-      <input
-        type="text"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        placeholder="+1 555 555 5555"
-        className="px-4 py-3 rounded-md bg-gray-800 border border-gray-700 w-72 text-center"
-      />
+      <h1 className="text-3xl font-bold mb-6">Sign Up</h1>
+      <div className="flex gap-2">
+        <select
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          className="bg-black border border-gray-600 p-2 rounded-md"
+        >
+          <option value="+91">🇮🇳 +91</option>
+          <option value="+1">🇺🇸 +1</option>
+        </select>
+        <input
+          type="tel"
+          placeholder="Enter mobile number"
+          value={mobile}
+          onChange={(e) => setMobile(e.target.value)}
+          className="bg-black border border-gray-600 p-2 rounded-md text-white w-60"
+        />
+      </div>
+
       <button
-        onClick={() => router.push('/launch/otp')}
+        onClick={handleContinue}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full font-semibold hover:scale-105 transition"
       >
-        Get OTP
+        Continue
       </button>
     </main>
   )
