@@ -1,43 +1,56 @@
 'use client'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function Send() {
+export default function SendPage() {
   const router = useRouter()
-  const [recipient, setRecipient] = useState('')
+  const [mobile, setMobile] = useState('')
   const [amount, setAmount] = useState('')
+  const [limitAlert, setLimitAlert] = useState(false)
+
+  const handleSend = () => {
+    if (parseFloat(amount) > 5) {
+      setLimitAlert(true)
+      return
+    }
+    alert(`$${amount} sent successfully to ${mobile}!`)
+    // @ts-ignore
+    router.push('/launch/dashboard')
+  }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white">
-      <h2 className="text-3xl font-bold mb-4">Send Money</h2>
-      <p className="text-gray-400 mb-8">Enter recipient & amount (demo only)</p>
+      <h1 className="text-3xl font-bold mb-4">Send Money</h1>
+      <p className="text-gray-400 mb-6 text-center">Enter recipient mobile number and amount to send.</p>
+
       <input
-        type="text"
-        placeholder="Recipient phone or wallet"
-        value={recipient}
-        onChange={(e) => setRecipient(e.target.value)}
-        className="px-4 py-3 rounded-md bg-gray-800 border border-gray-700 w-80 mb-4"
+        type="tel"
+        placeholder="Recipient Mobile"
+        value={mobile}
+        onChange={(e) => setMobile(e.target.value)}
+        className="bg-black border border-gray-600 p-2 rounded-md text-white mb-3 w-60"
       />
       <input
         type="number"
-        placeholder="Amount (USDC)"
+        placeholder="Amount ($)"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        className="px-4 py-3 rounded-md bg-gray-800 border border-gray-700 w-80"
+        className="bg-black border border-gray-600 p-2 rounded-md text-white mb-3 w-60"
       />
+
       <button
-        onClick={() => alert(`✅ Sent ${amount} USDC to ${recipient}! (Demo)`)}
-        className="mt-8 px-8 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full font-semibold hover:scale-105 transition"
+        onClick={handleSend}
+        className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full font-semibold hover:scale-105 transition"
       >
-        Confirm Transfer
+        Send
       </button>
-      <button
-        onClick={() => router.push('/launch/dashboard')}
-        className="mt-6 text-gray-400 hover:text-white"
-      >
-        ← Back to Dashboard
-      </button>
+
+      {limitAlert && (
+        <div className="text-red-400 text-sm mt-4 max-w-sm text-center">
+          🚨 First demo transaction is limited to $5 for safety. Subsequent transactions can reach $10,000/day.
+        </div>
+      )}
     </main>
   )
 }
-
