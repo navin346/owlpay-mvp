@@ -1,7 +1,9 @@
-export default function Footer(){
+export default function Footer() {
   return (
-    <div className="text-xs text-zinc-500 mt-14 border-t border-zinc-800 pt-6">
-      © {new Date().getFullYear()} OwlPay — Demo MVP. GENIUS-compliant stablecoins only. US on-ramp via Bridge (Stablecoin.xyz). INR off-ramp via CoinDCX for KYC’d users.
-    </div>
-  )
+    <footer className="w-full border-t border-zinc-200/60 dark:border-zinc-800/60 py-10">
+      <div className="max-w-6xl mx-auto px-6 text-sm text-zinc-500 dark:text-zinc-400">
+        <p>© {new Date().getFullYear()} OwlPay — demo MVP for compliant US⇄IN remittances.</p>
+      </div>
+    </footer>
+  );
 }
