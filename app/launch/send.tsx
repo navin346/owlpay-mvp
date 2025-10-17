@@ -2,10 +2,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function SendPage() {
-  const router = useRouter()
   const [country, setCountry] = useState('+91')
   const [mobile, setMobile] = useState('')
   const [amount, setAmount] = useState('')
@@ -20,7 +18,7 @@ export default function SendPage() {
       return
     }
     alert(`$${val.toFixed(2)} sent successfully to ${country} ${mobile}! (Demo SMS/WhatsApp sent)`)
-    router.push('/launch/dashboard')
+    window.location.href = '/launch/dashboard'
   }
 
   return (
