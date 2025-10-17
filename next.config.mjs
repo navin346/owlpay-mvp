@@ -2,12 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
 
-  // 🚫 Disable typed routes (this is what causes the "/launch/..." typed-route errors)
+  // ⛔ Turn OFF typed routes (this is what causes the "/launch/..." errors)
   experimental: {
     typedRoutes: false,
   },
 
-  // ✅ Let the build succeed even if TS finds type issues (safe for this MVP demo)
+  // ✅ Don’t fail the build on TypeScript errors while we iterate fast
   typescript: {
     ignoreBuildErrors: true,
   },
