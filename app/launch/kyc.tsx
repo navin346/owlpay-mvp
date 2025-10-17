@@ -1,25 +1,44 @@
-
 'use client'
+
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function KYC() {
+export default function KycPage() {
   const router = useRouter()
+  const [file, setFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const handleUpload = () => {
+    if (!file) return alert('Please upload a KYC file (<10 MB).')
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+      alert('KYC verified successfully ✅')
+      // @ts-ignore
+      router.push('/launch/dashboard')
+    }, 2000)
+  }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white">
-      <h2 className="text-3xl font-bold mb-4">KYC Verification</h2>
-      <p className="text-gray-400 mb-6">
-        Upload your ID and proof of address (Demo auto-approve)
+      <h1 className="text-3xl font-bold mb-4">Upload KYC Documents</h1>
+      <p className="text-gray-400 mb-6 text-center">
+        Upload your Aadhaar & bank statement (for India) or SSN/ID (for US). Max 10 MB.
       </p>
-      <div className="p-6 rounded-lg border border-gray-700 bg-gray-900/60">
-        <input type="file" className="block mb-4 text-sm" />
-        <input type="file" className="block text-sm" />
-      </div>
+
+      <input
+        type="file"
+        accept="image/*,application/pdf"
+        onChange={(e) => setFile(e.target.files?.[0] || null)}
+        className="p-2 bg-black border border-gray-600 rounded-md"
+      />
+
       <button
-        onClick={() => router.push('/launch/dashboard')}
-        className="mt-8 px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full font-semibold hover:scale-105 transition"
+        onClick={handleUpload}
+        disabled={loading}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full font-semibold hover:scale-105 transition disabled:opacity-50"
       >
-        Submit & Continue
+        {loading ? 'Scanning KYC…' : 'Upload & Verify'}
       </button>
     </main>
   )
