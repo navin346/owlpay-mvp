@@ -1,10 +1,8 @@
 // @ts-nocheck
 'use client'
 
-import { useRouter } from 'next/navigation'
-
 export default function LaunchHome() {
-  const router = useRouter()
+  const go = () => (window.location.href = '/launch/signup')
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white px-6">
@@ -16,7 +14,7 @@ export default function LaunchHome() {
       </p>
 
       <button
-        onClick={() => router.push('/launch/signup')}
+        onClick={go}
         className="px-8 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full font-semibold hover:scale-105 transition"
       >
         Start Demo →
