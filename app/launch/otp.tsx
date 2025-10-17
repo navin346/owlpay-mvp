@@ -2,15 +2,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function OtpPage() {
   const [otp, setOtp] = useState('')
-  const router = useRouter()
 
   const verify = () => {
     if (otp === '1234') {
-      router.push('/launch/kyc')
+      window.location.href = '/launch/kyc'
     } else {
       alert('Invalid OTP — use 1234 for this demo.')
     }
