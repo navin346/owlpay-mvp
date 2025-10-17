@@ -9,14 +9,17 @@ export default function SignupPage() {
   const [country, setCountry] = useState('+91')
 
   const handleContinue = () => {
-    if (!mobile) return alert('Enter your phone number')
-    // @ts-ignore
+    if (!mobile.trim()) {
+      alert('Enter your phone number.')
+      return
+    }
     router.push('/launch/otp')
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white px-6">
       <h1 className="text-3xl font-bold mb-6">Sign Up</h1>
+
       <div className="flex gap-2">
         <select
           value={country}
@@ -28,10 +31,11 @@ export default function SignupPage() {
         </select>
         <input
           type="tel"
+          inputMode="numeric"
           placeholder="Enter mobile number"
           value={mobile}
           onChange={(e) => setMobile(e.target.value)}
-          className="bg-black border border-gray-600 p-2 rounded-md text-white w-60"
+          className="bg-black border border-gray-600 p-2 rounded-md text-white w-64"
         />
       </div>
 
@@ -41,6 +45,10 @@ export default function SignupPage() {
       >
         Continue
       </button>
+
+      <p className="mt-4 text-xs text-gray-500">
+        India (+91) or US (+1) mobiles only for this demo.
+      </p>
     </main>
   )
 }
