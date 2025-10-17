@@ -1,10 +1,8 @@
 // @ts-nocheck
 'use client'
 
-import { useRouter } from 'next/navigation'
-
 export default function DashboardPage() {
-  const router = useRouter()
+  const goSend = () => (window.location.href = '/launch/send')
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white px-6">
@@ -17,7 +15,7 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => router.push('/launch/send')}
+            onClick={goSend}
             className="bg-gradient-to-r from-purple-500 to-blue-500 py-2 rounded-lg font-semibold"
           >
             Send
