@@ -2,15 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
 
-  // ⛔ Turn OFF typed routes (this is what causes the "/launch/..." errors)
-  experimental: {
-    typedRoutes: false,
-  },
+  // IMPORTANT: turn OFF typed routes so string paths like "/launch/send" never fail builds
+  experimental: { typedRoutes: false },
 
-  // ✅ Don’t fail the build on TypeScript errors while we iterate fast
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Let the demo ship even if TypeScript finds issues
+  typescript: { ignoreBuildErrors: true },
 };
 
 export default nextConfig;
