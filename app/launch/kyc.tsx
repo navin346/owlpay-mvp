@@ -9,21 +9,27 @@ export default function KycPage() {
   const [loading, setLoading] = useState(false)
 
   const handleUpload = () => {
-    if (!file) return alert('Please upload a KYC file (<10 MB).')
+    if (!file) {
+      alert('Please upload a KYC file (<10 MB).')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File too large. Keep it under 10 MB.')
+      return
+    }
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
       alert('KYC verified successfully ✅')
-      // @ts-ignore
       router.push('/launch/dashboard')
-    }, 2000)
+    }, 1600)
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white">
-      <h1 className="text-3xl font-bold mb-4">Upload KYC Documents</h1>
-      <p className="text-gray-400 mb-6 text-center">
-        Upload your Aadhaar & bank statement (for India) or SSN/ID (for US). Max 10 MB.
+    <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white px-6">
+      <h1 className="text-3xl font-bold mb-2">KYC Verification</h1>
+      <p className="text-gray-400 mb-6 text-center max-w-xl">
+        Upload Aadhaar + bank statement (India) or SSN/ID (US). This demo accepts any image/PDF and simulates verification.
       </p>
 
       <input
