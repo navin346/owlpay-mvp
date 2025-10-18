@@ -1,9 +1,6 @@
-// @ts-nocheck
 'use client'
 
 export default function DashboardPage() {
-  const goSend = () => (window.location.href = '/launch/send')
-
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#0b0b0f] text-white px-6">
       <h1 className="text-3xl font-bold mb-2">Welcome to OwlPay Wallet</h1>
@@ -15,7 +12,7 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={goSend}
+            onClick={() => (window.location.href = '/launch/send')}
             className="bg-gradient-to-r from-purple-500 to-blue-500 py-2 rounded-lg font-semibold"
           >
             Send
