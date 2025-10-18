@@ -34,14 +34,14 @@ export default function Landing() {
           </span>
         </h1>
         <div className="flex items-center gap-6">
-          <Link href="#" className="hover:text-[#8b5cf6] transition">
+          <Link href="/" className="hover:text-[#8b5cf6] transition">
             Home
           </Link>
-          <Link href="#" className="hover:text-[#8b5cf6] transition">
+          <Link href="/whitepaper" className="hover:text-[#8b5cf6] transition">
             Whitepaper
           </Link>
           <Link
-            href="#"
+            href="/mvp"
             className="px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#06b6d4] rounded-full font-medium text-white shadow-md hover:shadow-[0_0_25px_-5px_#8b5cf6] transition"
           >
             Launch App
@@ -79,13 +79,13 @@ export default function Landing() {
 
         <div className="flex justify-center gap-4 mt-8">
           <Link
-            href="#"
+            href="/mvp"
             className="px-6 py-3 rounded-full bg-gradient-to-r from-[#8b5cf6] via-[#6366f1] to-[#06b6d4] font-semibold hover:scale-105 hover:shadow-[0_0_20px_-5px_#7c3aed] transition"
           >
             Launch App
           </Link>
           <Link
-            href="#"
+            href="/whitepaper"
             className={`px-6 py-3 rounded-full font-semibold border ${
               darkMode
                 ? 'border-gray-600 hover:border-[#8b5cf6]'
