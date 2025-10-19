@@ -1,586 +1,1534 @@
 'use client'
 
+import clsx from 'clsx'
 import Link from 'next/link'
-import { useMemo, useState, type ReactNode } from 'react'
-
-type Screen = {
-  id: string
-  eyebrow: string
-  title: string
-  description: string
-  accent: string
-  content: ReactNode
-}
+import { useMemo, useState } from 'react'
 
 type FlowKey = 'new' | 'existing'
 
-const contactBook = [
-  { name: 'Aanya Sharma', country: 'IN', phone: '+91 98765 43210' },
-  { name: 'Rohan Patel', country: 'IN', phone: '+91 99888 11223' },
-  { name: 'Meera Kaur', country: 'IN', phone: '+91 90345 66554' },
-  { name: 'Daniel Cooper', country: 'US', phone: '+1 415 555 0198' },
+type Transaction = {
+  id: string
+  label: string
+  amount: number
+  currency: 'USD' | 'INR'
+  detail: string
+  channel: 'ach' | 'card' | 'transfer'
+  time: string
+}
+
+type Contact = {
+  name: string
+  phone: string
+  country: 'US' | 'IN'
+  relationship: string
+}
+
+type NewUserState = {
+  phone: string
+  otpInput: string
+  otpGenerated: string | null
+  otpSent: boolean
+  profile: {
+    firstName: string
+    lastName: string
+    email: string
+    country: string
+    dob: string
+  }
+  kyc: {
+    docCountry: string
+    docType: 'passport' | 'driver' | 'id'
+    status: 'idle' | 'pending' | 'approved' | 'rejected'
+  }
+  wallet: {
+    balance: number
+    fxRate: number
+    limit: 'intro' | 'full'
+    transactions: Transaction[]
+    cards: { brand: 'Visa' | 'Mastercard'; last4: string; autopay: boolean }[]
+  }
+  send: {
+    recipient: string
+    amount: string
+    note: string
+    notification?: {
+      channel: 'sms' | 'whatsapp'
+      copy: string
+    }
+    error?: string
+    successBanner?: string
+  }
+}
+
+type ExistingUserState = {
+  wallet: {
+    balance: number
+    fxRate: number
+    transactions: Transaction[]
+    cards: { brand: 'Visa' | 'Mastercard'; last4: string; autopay: boolean }[]
+  }
+  deposit: {
+    method: 'ach' | 'card'
+    amount: string
+    estimation: string
+    status?: 'idle' | 'processing' | 'completed'
+  }
+  send: {
+    recipient: string
+    amount: string
+    note: string
+    error?: string
+    successBanner?: string
+  }
+  receive: {
+    linkCopied: boolean
+  }
+}
+
+type StepProps<State> = {
+  state: State
+  setState: React.Dispatch<React.SetStateAction<State>>
+  goNext: () => void
+  goPrev: () => void
+}
+
+type StepDefinition<State> = {
+  id: string
+  label: string
+  blurb: string
+  component: (props: StepProps<State>) => JSX.Element
+}
+
+const contactBook: Contact[] = [
+  { name: 'Aanya Sharma', phone: '+91 98765 43210', country: 'IN', relationship: 'Family' },
+  { name: 'Rohan Patel', phone: '+91 99888 11223', country: 'IN', relationship: 'Friend' },
+  { name: 'Meera Kaur', phone: '+91 90345 66554', country: 'IN', relationship: 'Business' },
+  { name: 'Daniel Cooper', phone: '+1 415 555 0198', country: 'US', relationship: 'Self' },
 ]
 
-const newUserScreens: Screen[] = [
-  {
-    id: 'mobile',
-    eyebrow: 'Step 1',
-    title: 'Capture mobile number to start onboarding',
-    description:
-      'Localized phone entry with US ↔︎ India presets. We validate E.164 formats before progressing to OTP.',
-    accent: 'from-brand-500 via-ocean to-mint',
-    content: (
-      <div className="space-y-6">
-        <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-6 shadow-card">
-          <div className="flex items-center justify-between text-sm text-white/60">
-            <span>Mobile number</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-widest text-white/70">
-              <span role="img" aria-label="flag">
-                🇺🇸
-              </span>
-              +1
-            </span>
-          </div>
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-3 text-sm">
-              <span className="text-lg" role="img" aria-label="flag">
-                🇮🇳
-              </span>
-              <span className="font-semibold text-white/80">+91</span>
-            </div>
-            <input
-              className="flex-1 rounded-xl border border-white/15 bg-black/40 px-4 py-3 text-lg font-medium text-white placeholder:text-white/30"
-              value="+91 88882 06307"
-              readOnly
-            />
-          </div>
+const newInitialState: NewUserState = {
+  phone: '+1 415 555 0110',
+  otpInput: '',
+  otpGenerated: null,
+  otpSent: false,
+  profile: {
+    firstName: 'Arjun',
+    lastName: 'Menon',
+    email: 'arjun.menon@owlpay.com',
+    country: 'India',
+    dob: '1995-08-24',
+  },
+  kyc: {
+    docCountry: 'India',
+    docType: 'passport',
+    status: 'idle',
+  },
+  wallet: {
+    balance: 10800,
+    fxRate: 83.2,
+    limit: 'intro',
+    cards: [
+      { brand: 'Visa', last4: '2562', autopay: true },
+      { brand: 'Mastercard', last4: '4411', autopay: false },
+    ],
+    transactions: [
+      {
+        id: 'txn-1',
+        label: 'Incoming payroll in USDC',
+        amount: 520.9,
+        currency: 'USD',
+        detail: 'Today • 12:04 PM',
+        channel: 'transfer',
+        time: '12:04 PM',
+      },
+      {
+        id: 'txn-2',
+        label: 'Transfer to Aanya Sharma',
+        amount: -140,
+        currency: 'USD',
+        detail: 'Today • 11:52 AM',
+        channel: 'transfer',
+        time: '11:52 AM',
+      },
+      {
+        id: 'txn-3',
+        label: 'Deposit via Visa •••• 2562',
+        amount: 450,
+        currency: 'USD',
+        detail: 'Yesterday • 09:45 AM',
+        channel: 'card',
+        time: '09:45 AM',
+      },
+    ],
+  },
+  send: {
+    recipient: '+91 90000 22111',
+    amount: '5',
+    note: 'Dinner with team',
+  },
+}
+
+const existingInitialState: ExistingUserState = {
+  wallet: {
+    balance: 24560,
+    fxRate: 82.8,
+    cards: [
+      { brand: 'Visa', last4: '7382', autopay: true },
+      { brand: 'Mastercard', last4: '4411', autopay: false },
+    ],
+    transactions: [
+      {
+        id: 'ex-1',
+        label: 'Payroll deposit',
+        amount: 4200,
+        currency: 'USD',
+        detail: 'ACH via JP Morgan',
+        channel: 'ach',
+        time: '09:00 AM',
+      },
+      {
+        id: 'ex-2',
+        label: 'Transfer to Rohan Patel',
+        amount: -3500,
+        currency: 'USD',
+        detail: 'Settled in ₹',
+        channel: 'transfer',
+        time: '08:24 AM',
+      },
+      {
+        id: 'ex-3',
+        label: 'Gasless fee',
+        amount: -0.3,
+        currency: 'USD',
+        detail: 'Sponsored transaction',
+        channel: 'transfer',
+        time: '08:23 AM',
+      },
+    ],
+  },
+  deposit: {
+    method: 'ach',
+    amount: '2000',
+    estimation: '₹165,600.00',
+    status: 'idle',
+  },
+  send: {
+    recipient: '+91 99888 11223',
+    amount: '3500',
+    note: 'Invoice OWL-448',
+  },
+  receive: {
+    linkCopied: false,
+  },
+}
+
+const gradientByFlow: Record<FlowKey, string> = {
+  new: 'from-brand-500 via-ocean to-mint',
+  existing: 'from-ocean via-mint to-brand-500',
+}
+
+const headingByFlow: Record<FlowKey, { title: string; intro: string; highlights: string[] }> = {
+  new: {
+    title: 'New user launch journey',
+    intro:
+      'Walk through onboarding an unverified customer from phone capture to first remittance with OwlPay. Each step mirrors the production workflow with validations, guardrails, and notifications.',
+    highlights: [
+      'OTP delivery with demo code reveal for product walkthroughs.',
+      'Progressive KYC states with approve/reject loops for compliance sign-off.',
+      'Transaction limits escalate from $5 intro cap to $10k after successful delivery.',
+    ],
+  },
+  existing: {
+    title: 'Returning customer workspace',
+    intro:
+      'Demonstrate how a verified customer jumps straight into high-limit remittances. Explore deposits, contact book payouts, and instant INR claim links.',
+    highlights: [
+      'ACH and card ramps with live INR estimation.',
+      'Contact suggestions pre-filled from previous activity.',
+      'Gasless experience with USDC-as-gas and WhatsApp claim links.',
+    ],
+  },
+}
+
+function formatCurrency(value: number, currency: 'USD' | 'INR' = 'USD') {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+function StepShell({
+  title,
+  description,
+  children,
+  accent,
+}: {
+  title: string
+  description: string
+  children: React.ReactNode
+  accent: FlowKey
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5/80 p-6 shadow-[0_40px_80px_-45px_rgba(34,211,238,0.55)] backdrop-blur-xl">
+      <div className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${gradientByFlow[accent]}`} />
+      <div className="space-y-4">
+        <header className="space-y-2">
+          <h2 className="text-2xl font-semibold text-white">{title}</h2>
+          <p className="text-sm text-white/70">{description}</p>
+        </header>
+        <div className="rounded-2xl border border-white/5 bg-black/40 p-5 shadow-inner shadow-black/40">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+const phoneRegex = /^\+?[0-9\s-]{8,16}$/
+
+function PhoneCaptureStep({ state, setState, goNext }: StepProps<NewUserState>) {
+  const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
+
+  function sendOtp() {
+    if (!phoneRegex.test(state.phone)) {
+      setError('Enter a valid international mobile number (E.164).')
+      return
+    }
+    const generated = Math.floor(100000 + Math.random() * 900000).toString()
+    setState((prev) => ({
+      ...prev,
+      otpGenerated: generated,
+      otpSent: true,
+      otpInput: '',
+    }))
+    setError(null)
+    setInfo(`Demo OTP sent • Code ${generated}`)
+  }
+
+  function continueFlow() {
+    if (!state.otpSent) {
+      setError('Send an OTP to continue the onboarding.')
+      return
+    }
+    goNext()
+  }
+
+  return (
+    <StepShell
+      accent="new"
+      title="Enter mobile number"
+      description="We localise formats for US ⇄ India and pre-validate before dispatching an OTP."
+    >
+      <div className="space-y-4">
+        <label className="space-y-2">
+          <span className="text-xs uppercase tracking-[0.3em] text-white/50">Mobile number</span>
+          <input
+            value={state.phone}
+            onChange={(event) =>
+              setState((prev) => ({ ...prev, phone: event.target.value }))
+            }
+            placeholder="+1 415 555 0110"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base font-medium text-white placeholder:text-white/40 focus:border-ocean focus:outline-none"
+            inputMode="tel"
+          />
+        </label>
+        {error && <p className="text-sm text-sunset">{error}</p>}
+        {info && <p className="text-sm text-mint">{info}</p>}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <button
+            onClick={sendOtp}
+            className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-500 via-ocean to-mint px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_-18px_rgba(34,211,238,0.7)] transition hover:scale-[1.02]"
+          >
+            Send OTP
+          </button>
+          <button
+            onClick={continueFlow}
+            className="text-sm font-semibold text-white/70 underline decoration-dotted underline-offset-4 hover:text-white"
+          >
+            Continue →
+          </button>
         </div>
-        <button className="w-full rounded-xl bg-gradient-to-r from-brand-500 via-ocean to-mint py-3 font-semibold text-white shadow-[0_15px_40px_-10px_rgba(34,211,238,0.6)]">
-          Confirm number
-        </button>
-        <p className="text-center text-xs text-white/60">
-          By registering, you accept our <span className="text-ocean">Terms</span> and <span className="text-ocean">Privacy Policy</span>.
+        <p className="text-xs text-white/60">
+          By registering you accept OwlPay&apos;s Terms and Privacy Policy. SMS delivery is powered by Twilio with fallback to WhatsApp.
         </p>
       </div>
-    ),
-  },
-  {
-    id: 'otp',
-    eyebrow: 'Step 2',
-    title: 'Deliver and verify OTP securely',
-    description: 'A six-digit OTP is delivered instantly with auto-fill hints. Expiry timer and resend controls are included.',
-    accent: 'from-ocean via-brand-500 to-mint',
-    content: (
-      <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr]">
-        <div className="rounded-2xl border border-white/10 bg-black/40 p-6">
-          <p className="text-sm text-white/70">Enter confirmation code sent to</p>
-          <p className="mt-1 text-lg font-semibold text-white">+91 88882 06307</p>
-          <div className="mt-6 flex gap-3">
-            {[0, 2, 1, 6, 8, 4].map((digit, index) => (
-              <div
-                key={index}
-                className="flex h-14 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-xl font-semibold text-white shadow-inner shadow-black/40"
-              >
-                {digit}
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 flex items-center justify-between text-xs text-white/60">
-            <span>02:00 remaining</span>
-            <button className="text-ocean">Resend code</button>
+    </StepShell>
+  )
+}
+
+function OTPStep({ state, setState, goNext, goPrev }: StepProps<NewUserState>) {
+  const [error, setError] = useState<string | null>(null)
+  const codeHint = state.otpGenerated ?? '———'
+
+  function verify() {
+    if (!state.otpGenerated) {
+      setError('Send a code first.')
+      return
+    }
+    if (state.otpInput !== state.otpGenerated) {
+      setError('Invalid code. Try again or resend.')
+      return
+    }
+    setState((prev) => ({
+      ...prev,
+      otpGenerated: null,
+      otpSent: true,
+    }))
+    setError(null)
+    goNext()
+  }
+
+  return (
+    <StepShell
+      accent="new"
+      title="Confirm OTP"
+      description="A six digit code is generated instantly with auto-fill hints and two minute expiry."
+    >
+      <div className="space-y-5">
+        <p className="text-sm text-white/60">
+          Enter the code sent to <span className="font-semibold text-white">{state.phone}</span>.
+        </p>
+        <div className="flex gap-3">
+          <input
+            value={state.otpInput}
+            onChange={(event) =>
+              setState((prev) => ({
+                ...prev,
+                otpInput: event.target.value.replace(/[^0-9]/g, '').slice(0, 6),
+              }))
+            }
+            placeholder="••••••"
+            inputMode="numeric"
+            className="flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-center text-2xl tracking-[0.5em] text-white focus:border-ocean focus:outline-none"
+          />
+          <div className="flex w-40 flex-col justify-between rounded-xl border border-mint/50 bg-mint/10 p-3 text-xs text-mint">
+            <span className="font-semibold uppercase tracking-[0.3em] text-mint/80">Demo code</span>
+            <span className="text-lg font-mono tracking-[0.4em] text-mint-100">{codeHint}</span>
+            <span className="text-[10px] text-mint/70">Auto-clears after successful verification.</span>
           </div>
         </div>
-        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-6 text-sm text-emerald-100">
-          <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">SMS preview</p>
-          <p className="mt-3 leading-relaxed">
-            “OwlPay: Your verification code is <span className="font-semibold text-emerald-300">021684</span>. Do not share this with anyone.”
-          </p>
-          <div className="mt-5 rounded-xl border border-emerald-400/30 bg-black/30 px-4 py-3 text-xs text-emerald-200">
-            Protected by Privy • Device binding enabled
-          </div>
+        {error && <p className="text-sm text-sunset">{error}</p>}
+        <div className="flex flex-wrap items-center gap-3 text-sm text-white/60">
+          <button onClick={goPrev} className="underline decoration-dotted underline-offset-4 hover:text-white">
+            ← Edit number
+          </button>
+          <button onClick={verify} className="font-semibold text-white hover:text-mint">
+            Verify & continue
+          </button>
+          <span className="ml-auto text-xs uppercase tracking-[0.4em] text-white/40">02:00 timer</span>
         </div>
       </div>
-    ),
-  },
-  {
-    id: 'profile',
-    eyebrow: 'Step 3',
-    title: 'Collect profile information',
-    description: 'Capture mandatory fields with inline validation before KYC submission.',
-    accent: 'from-brand-500 via-purple-500 to-ocean',
-    content: (
+    </StepShell>
+  )
+}
+
+function ProfileStep({ state, setState, goNext, goPrev }: StepProps<NewUserState>) {
+  const profile = state.profile
+  const [error, setError] = useState<string | null>(null)
+
+  function continueProfile() {
+    if (!profile.firstName || !profile.lastName || !profile.email || !profile.dob) {
+      setError('Complete all fields before continuing.')
+      return
+    }
+    setError(null)
+    goNext()
+  }
+
+  return (
+    <StepShell
+      accent="new"
+      title="Capture profile information"
+      description="Required for compliance in both the United States and India."
+    >
       <div className="space-y-4">
-        {[
-          { label: 'First name', value: 'Arjun' },
-          { label: 'Last name', value: 'Menon' },
-          { label: 'Country of residence', value: 'India' },
-          { label: 'Date of birth', value: '1995-08-24' },
-          { label: 'Email', value: 'arjun.menon@owlpay.com' },
-        ].map((field) => (
-          <div key={field.label} className="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
-            <p className="text-xs uppercase tracking-wide text-white/50">{field.label}</p>
-            <p className="mt-2 text-lg font-semibold text-white">{field.value}</p>
-          </div>
-        ))}
-        <button className="w-full rounded-xl border border-white/20 bg-white/10 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/20">
-          Continue to KYC
-        </button>
-      </div>
-    ),
-  },
-  {
-    id: 'kyc-docs',
-    eyebrow: 'Step 4',
-    title: 'Document capture & verification',
-    description: 'Users pick issuing country and document type. OCR & liveness happen in background.',
-    accent: 'from-ocean via-mint to-brand-500',
-    content: (
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <p className="text-xs uppercase tracking-widest text-white/60">Issuing country</p>
-          <div className="mt-3 flex items-center justify-between rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-white">
-            <span className="flex items-center gap-2">
-              <span role="img" aria-label="flag" className="text-xl">
-                🇮🇳
-              </span>
-              India
-            </span>
-            <span className="text-xs text-white/50">Change</span>
-          </div>
-          <p className="mt-6 text-xs uppercase tracking-widest text-white/60">Document type</p>
-          <div className="mt-3 space-y-3">
-            {['Passport', 'Driver license', 'ID card'].map((doc, index) => (
-              <div
-                key={doc}
-                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm transition ${
-                  index === 0 ? 'border-ocean/50 bg-ocean/15 text-white' : 'border-white/10 bg-black/40 text-white/70 hover:text-white'
-                }`}
-              >
-                <span>{doc}</span>
-                {index === 0 && <span className="text-xs uppercase tracking-[0.2em] text-ocean">Selected</span>}
-              </div>
-            ))}
-          </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">First name</span>
+            <input
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-white focus:border-ocean focus:outline-none"
+              value={profile.firstName}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  profile: { ...prev.profile, firstName: event.target.value },
+                }))
+              }
+              placeholder="Arjun"
+            />
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Last name</span>
+            <input
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-white focus:border-ocean focus:outline-none"
+              value={profile.lastName}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  profile: { ...prev.profile, lastName: event.target.value },
+                }))
+              }
+              placeholder="Menon"
+            />
+          </label>
+          <label className="space-y-2 text-sm md:col-span-2">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Email</span>
+            <input
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-white focus:border-ocean focus:outline-none"
+              value={profile.email}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  profile: { ...prev.profile, email: event.target.value },
+                }))
+              }
+              placeholder="you@example.com"
+              type="email"
+            />
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Country of residence</span>
+            <select
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-white focus:border-ocean focus:outline-none"
+              value={profile.country}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  profile: { ...prev.profile, country: event.target.value },
+                }))
+              }
+            >
+              <option value="India">India</option>
+              <option value="United States">United States</option>
+            </select>
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Date of birth</span>
+            <input
+              type="date"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-white focus:border-ocean focus:outline-none"
+              value={profile.dob}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  profile: { ...prev.profile, dob: event.target.value },
+                }))
+              }
+            />
+          </label>
         </div>
-        <div className="flex h-full flex-col justify-between rounded-2xl border border-white/10 bg-gradient-to-br from-black/50 via-black/10 to-white/5 p-5">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-white/60">Live capture checklist</p>
-            <ul className="mt-4 space-y-3 text-sm text-white/70">
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-mint"></span>
-                <span>Front & back images validated in under 10 seconds.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-ocean"></span>
-                <span>Liveness selfie compared with document portrait.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-brand-500"></span>
-                <span>Sanctions & watchlist checks run automatically.</span>
-              </li>
-            </ul>
-          </div>
-          <button className="mt-6 w-full rounded-xl bg-gradient-to-r from-brand-500 via-ocean to-mint py-3 text-sm font-semibold shadow-[0_15px_40px_-12px_rgba(139,92,246,0.8)]">
+        {error && <p className="text-sm text-sunset">{error}</p>}
+        <div className="flex items-center gap-3 text-sm text-white/60">
+          <button onClick={goPrev} className="underline decoration-dotted underline-offset-4 hover:text-white">
+            ← Back
+          </button>
+          <button onClick={continueProfile} className="font-semibold text-white hover:text-mint">
+            Continue to KYC
+          </button>
+        </div>
+      </div>
+    </StepShell>
+  )
+}
+
+function KYCCaptureStep({ state, setState, goNext, goPrev }: StepProps<NewUserState>) {
+  const kyc = state.kyc
+  const [info, setInfo] = useState<string | null>(null)
+
+  function submit() {
+    setState((prev) => ({
+      ...prev,
+      kyc: { ...prev.kyc, status: 'pending' },
+    }))
+    setInfo('Submitted for review — liveness and sanctions checks running.')
+    goNext()
+  }
+
+  return (
+    <StepShell
+      accent="new"
+      title="Document capture"
+      description="We support passport, driver licence, or national ID with selfie and sanctions screening."
+    >
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Issuing country</span>
+            <select
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-white focus:border-ocean focus:outline-none"
+              value={kyc.docCountry}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  kyc: { ...prev.kyc, docCountry: event.target.value },
+                }))
+              }
+            >
+              <option value="India">India</option>
+              <option value="United States">United States</option>
+            </select>
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Document type</span>
+            <select
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-white focus:border-ocean focus:outline-none"
+              value={kyc.docType}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  kyc: {
+                    ...prev.kyc,
+                    docType: event.target.value as NewUserState['kyc']['docType'],
+                  },
+                }))
+              }
+            >
+              <option value="passport">Passport</option>
+              <option value="driver">Driver licence</option>
+              <option value="id">National ID</option>
+            </select>
+          </label>
+        </div>
+        <ul className="space-y-3 text-sm text-white/70">
+          <li className="flex items-start gap-3">
+            <span className="mt-1 h-2.5 w-2.5 rounded-full bg-mint" />
+            Selfie liveness compared with passport photo in under 10 seconds.
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="mt-1 h-2.5 w-2.5 rounded-full bg-ocean" />
+            OFAC, BIS, and Indian AML checks run asynchronously with retries.
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="mt-1 h-2.5 w-2.5 rounded-full bg-brand-500" />
+            Audit trail stored for 7 years per federal guidelines.
+          </li>
+        </ul>
+        {info && <p className="text-sm text-mint">{info}</p>}
+        <div className="flex items-center gap-3 text-sm text-white/60">
+          <button onClick={goPrev} className="underline decoration-dotted underline-offset-4 hover:text-white">
+            ← Back
+          </button>
+          <button onClick={submit} className="font-semibold text-white hover:text-mint">
             Submit for review
           </button>
         </div>
       </div>
-    ),
-  },
-  {
-    id: 'kyc-status',
-    eyebrow: 'Step 5',
-    title: 'KYC outcomes with retry loop',
-    description: 'Instantly surface the status and allow users to retry if documentation fails.',
-    accent: 'from-mint via-ocean to-brand-500',
-    content: (
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-5 text-emerald-50">
-          <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">Approved</p>
-          <h4 className="mt-3 text-lg font-semibold">Welcome to OwlPay</h4>
-          <p className="mt-2 text-sm leading-relaxed text-emerald-100/80">
-            Your documents are verified. You can now receive and send up to $10,000 instantly.
+    </StepShell>
+  )
+}
+function KYCOutcomeStep({ state, setState, goNext, goPrev }: StepProps<NewUserState>) {
+  const status = state.kyc.status
+
+  function setStatus(next: 'approved' | 'rejected') {
+    setState((prev) => ({
+      ...prev,
+      kyc: { ...prev.kyc, status: next },
+      wallet: {
+        ...prev.wallet,
+        limit: next === 'approved' ? 'intro' : prev.wallet.limit,
+      },
+    }))
+  }
+
+  return (
+    <StepShell
+      accent="new"
+      title="Review outcome"
+      description="Compliance can approve instantly or request another upload."
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-5 text-sm text-emerald-100">
+          <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Approve</p>
+          <h3 className="mt-2 text-lg font-semibold text-emerald-50">KYC approved</h3>
+          <p className="mt-2 leading-relaxed">
+            Unlock send limits to $10,000 after the first successful payout. Wallet access is available immediately.
           </p>
-          <button className="mt-4 rounded-full border border-emerald-200/50 bg-emerald-400/20 px-4 py-2 text-xs font-semibold tracking-wide text-emerald-50">
-            Go to wallet
+          <button
+            className="mt-4 inline-flex items-center rounded-full border border-emerald-200/40 px-4 py-2 text-xs font-semibold tracking-[0.3em] text-emerald-50"
+            onClick={() => {
+              setStatus('approved')
+              goNext()
+            }}
+          >
+            Mark approved
           </button>
         </div>
-        <div className="rounded-2xl border border-orange-400/40 bg-orange-500/10 p-5 text-orange-50">
-          <p className="text-xs uppercase tracking-[0.2em] text-orange-200">Needs attention</p>
-          <h4 className="mt-3 text-lg font-semibold">Document blur detected</h4>
-          <p className="mt-2 text-sm leading-relaxed text-orange-100/80">
-            Re-upload your passport photo page to complete verification. We keep your data encrypted during review.
+        <div className="rounded-2xl border border-orange-400/40 bg-orange-500/10 p-5 text-sm text-orange-100">
+          <p className="text-xs uppercase tracking-[0.3em] text-orange-200">Reject</p>
+          <h3 className="mt-2 text-lg font-semibold text-orange-50">Needs attention</h3>
+          <p className="mt-2 leading-relaxed">
+            Surface actionable feedback (e.g. blur or mismatch) and allow the user to re-upload immediately.
           </p>
-          <button className="mt-4 rounded-full border border-orange-200/50 bg-orange-400/20 px-4 py-2 text-xs font-semibold tracking-wide text-orange-50">
-            Try again
+          <button
+            className="mt-4 inline-flex items-center rounded-full border border-orange-200/40 px-4 py-2 text-xs font-semibold tracking-[0.3em] text-orange-50"
+            onClick={() => setStatus('rejected')}
+          >
+            Flag for retry
           </button>
         </div>
-      </div>
-    ),
-  },
-  {
-    id: 'wallet-home',
-    eyebrow: 'Step 6',
-    title: 'Wallet home with card-on-file',
-    description: 'Account balance, saved Visa / Mastercard and core actions are front-and-center for first-time users.',
-    accent: 'from-brand-500 via-ocean to-purple-500',
-    content: (
-      <div className="grid gap-5 lg:grid-cols-[1.5fr,1fr]">
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/0 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-white/60">Balance</p>
-              <p className="mt-2 text-4xl font-bold text-white">$10,800.00</p>
-            </div>
-            <div className="flex flex-col items-end text-xs text-white/60">
-              <span>USDC • Layer 2</span>
-              <span>FX locked at ₹83.2</span>
-            </div>
+        <div className="space-y-3 rounded-2xl border border-white/10 bg-black/40 p-5 text-sm text-white/70 md:col-span-2">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-white/40">
+            Status timeline
+            <span
+              className={clsx(
+                'h-2 w-2 rounded-full',
+                status === 'approved' ? 'bg-mint' : status === 'rejected' ? 'bg-sunset' : 'bg-white/20',
+              )}
+            />
           </div>
-          <div className="mt-6 flex items-center gap-4">
-            <div className="h-28 flex-1 rounded-3xl bg-gradient-to-br from-black/60 via-black/40 to-black/10 p-4">
-              <p className="text-xs text-white/50">Linked card</p>
-              <p className="mt-3 text-lg font-semibold text-white">Visa •••• 2562</p>
-              <p className="mt-1 text-xs text-white/60">Autoload enabled</p>
-            </div>
-            <div className="h-28 flex-1 rounded-3xl border border-dashed border-white/20 p-4">
-              <p className="text-xs text-white/40">Add Mastercard</p>
-              <p className="mt-2 text-xs text-white/60">Tap to connect</p>
-            </div>
-          </div>
-          <div className="mt-6 grid grid-cols-3 gap-3 text-sm font-semibold">
-            {['Send', 'Deposit', 'Receive'].map((label, index) => (
-              <button
-                key={label}
-                className={`rounded-2xl py-3 transition ${
-                  index === 0
-                    ? 'bg-gradient-to-r from-sunset/80 via-brand-500/80 to-ocean/80 text-white shadow-card'
-                    : 'border border-white/15 bg-white/5 text-white hover:bg-white/10'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/30 p-6 text-sm text-white/70">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Transaction timeline</p>
-          <div className="space-y-4">
-            {[
-              { label: 'Incoming from USD payroll', amount: '+$520.90', time: 'Today • 12:04 PM' },
-              { label: 'Transfer to Aanya Sharma', amount: '-$140.00', time: 'Today • 11:52 AM' },
-              { label: 'Deposit via Visa •••• 2562', amount: '+$450.00', time: 'Yesterday • 09:45 AM' },
-            ].map((txn) => (
-              <div key={txn.label} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <div>
-                  <p className="font-medium text-white">{txn.label}</p>
-                  <p className="text-xs text-white/50">{txn.time}</p>
-                </div>
-                <span className={txn.amount.startsWith('+') ? 'text-mint font-semibold' : 'text-sunset font-semibold'}>
-                  {txn.amount}
-                </span>
+          <div className="grid gap-3 md:grid-cols-3">
+            {['Submitted', status === 'rejected' ? 'Retry requested' : 'Under review', status === 'approved' ? 'Approved' : 'Ready for retry'].map((label, index) => (
+              <div key={label} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/40">{`T+${index * 2} min`}</p>
+                <p className="mt-2 text-sm font-semibold text-white">{label}</p>
               </div>
             ))}
           </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: 'send',
-    eyebrow: 'Step 7',
-    title: 'Send to a new contact with guardrails',
-    description: 'Max $5 on first transfer, then unlock $10k after a successful delivery. Recipients receive an SMS or WhatsApp link to onboard.',
-    accent: 'from-sunset via-brand-500 to-ocean',
-    content: (
-      <div className="grid gap-6 xl:grid-cols-[1.4fr,1fr]">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Send USDC</p>
-          <div className="mt-4 grid gap-4 text-sm">
-            <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-4">
-              <p className="text-xs text-white/50">Recipient mobile</p>
-              <p className="mt-2 text-lg font-semibold text-white">+91 90000 22111</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-4">
-              <p className="text-xs text-white/50">Amount (USD)</p>
-              <p className="mt-2 text-lg font-semibold text-white">$5.00</p>
-            </div>
-            <div className="flex flex-wrap gap-3 text-xs">
-              <span className="rounded-full bg-sunset/20 px-3 py-2 text-sunset">New recipient limit • $5</span>
-              <span className="rounded-full bg-mint/20 px-3 py-2 text-mint">After first success • $10,000</span>
-            </div>
-          </div>
-          <button className="mt-6 w-full rounded-xl bg-gradient-to-r from-sunset via-brand-500 to-ocean py-3 text-sm font-semibold shadow-[0_20px_45px_-15px_rgba(251,113,133,0.6)]">
-            Review transfer
-          </button>
-        </div>
-        <div className="flex flex-col gap-4">
-          <div className="rounded-3xl border border-white/10 bg-black/40 p-5 text-sm text-white/70">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/50">Contact book</p>
-            <div className="mt-3 space-y-3">
-              {contactBook.map((contact) => (
-                <div key={contact.phone} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <div>
-                    <p className="font-semibold text-white">{contact.name}</p>
-                    <p className="text-xs text-white/50">{contact.phone}</p>
-                  </div>
-                  <span className="text-xs uppercase tracking-[0.2em] text-white/40">{contact.country}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-3xl border border-emerald-400/30 bg-emerald-400/10 p-5 text-sm text-emerald-100">
-            <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">Recipient notification</p>
-            <p className="mt-3 leading-relaxed">
-              “You just received <span className="font-semibold text-emerald-200">$5.00</span> from <span className="font-semibold text-emerald-200">+1 415 555 0198</span>. Tap the link to create your OwlPay wallet and claim within 48 hours.”
-            </p>
-            <p className="mt-4 rounded-xl border border-emerald-300/40 bg-black/30 px-4 py-3 text-xs">
-              Delivered over SMS & WhatsApp with deep-link into mobile web app.
-            </p>
+          <div className="flex items-center justify-between text-xs text-white/50">
+            <button onClick={goPrev} className="underline decoration-dotted underline-offset-4 hover:text-white">
+              ← Back
+            </button>
+            <button
+              onClick={() => status === 'approved' && goNext()}
+              className="rounded-full bg-white/10 px-4 py-2 font-semibold text-white/70 hover:bg-white/20"
+            >
+              Proceed to wallet
+            </button>
           </div>
         </div>
       </div>
-    ),
-  },
-]
+    </StepShell>
+  )
+}
 
-const existingScreens: Screen[] = [
-  {
-    id: 'existing-wallet',
-    eyebrow: 'Wallet home',
-    title: 'Existing user dashboard',
-    description: 'Returning users land directly on their wallet with quick actions and FX insights.',
-    accent: 'from-brand-500 via-ocean to-mint',
-    content: (
-      <div className="grid gap-5 lg:grid-cols-[1.5fr,1fr]">
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-black/40 via-black/10 to-white/5 p-6">
-          <div className="flex items-center justify-between">
+function WalletOverviewStep({ state, goNext }: StepProps<NewUserState>) {
+  const wallet = state.wallet
+
+  return (
+    <StepShell
+      accent="new"
+      title="Wallet home"
+      description="Balance, cards on file, and quick actions for the newly verified customer."
+    >
+      <div className="grid gap-6 lg:grid-cols-[1.4fr,1fr]">
+        <div className="space-y-6 rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-white/50">Total balance</p>
-              <p className="mt-2 text-4xl font-bold text-white">$24,560.00</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/50">Balance</p>
+              <p className="mt-2 text-4xl font-bold text-white">{formatCurrency(wallet.balance, 'USD')}</p>
+              <p className="text-xs text-white/50">USDC • Layer 2</p>
             </div>
             <div className="text-right text-xs text-white/60">
-              <p>USDC • Layer 2</p>
-              <p>Live FX ₹82.8</p>
+              <p>FX locked at ₹{wallet.fxRate}</p>
+              <p>Limit: {wallet.limit === 'intro' ? '$5 first transfer' : '$10k per transfer'}</p>
             </div>
           </div>
-          <div className="mt-6 grid grid-cols-3 gap-3 text-sm font-semibold">
-            {['Deposit', 'Send', 'Receive'].map((label, index) => (
+          <div className="grid gap-4 md:grid-cols-2">
+            {wallet.cards.map((card) => (
+              <div key={card.last4} className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white/70">
+                <p className="text-sm font-semibold text-white">{card.brand} •••• {card.last4}</p>
+                <p className="text-xs text-white/50">{card.autopay ? 'Instant autoload' : 'Manual top-up'}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-sm font-semibold">
+            {['Send', 'Deposit', 'Receive'].map((action, index) => (
               <button
-                key={label}
-                className={`rounded-2xl py-3 transition ${
+                key={action}
+                onClick={() => goNext()}
+                className={clsx(
+                  'rounded-2xl py-3 transition',
                   index === 0
-                    ? 'bg-gradient-to-r from-ocean/80 via-mint/80 to-brand-500/80 text-white shadow-card'
-                    : 'border border-white/15 bg-white/5 text-white hover:bg-white/10'
-                }`}
+                    ? 'bg-gradient-to-r from-sunset via-brand-500 to-ocean text-white shadow-[0_20px_45px_-18px_rgba(251,113,133,0.6)]'
+                    : 'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                )}
               >
-                {label}
+                {action}
               </button>
             ))}
           </div>
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white/70">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/50">Cards on file</p>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
-              {[
-                { brand: 'Visa', last4: '7382', status: 'Instant autoload' },
-                { brand: 'Mastercard', last4: '4411', status: 'Manual top-up' },
-              ].map((card) => (
-                <div key={card.last4} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <p className="text-sm font-semibold text-white">{card.brand} •••• {card.last4}</p>
-                  <p className="text-xs text-white/50">{card.status}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
-        <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/30 p-6 text-sm text-white/70">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Recent activity</p>
-          <div className="space-y-4">
-            {[
-              { label: 'Payroll deposit', amount: '+$4,200.00', detail: 'ACH via JP Morgan', positive: true },
-              { label: 'Transfer to Rohan Patel', amount: '-$3,500.00', detail: 'Settled in ₹', positive: false },
-              { label: 'Gasless fee', amount: '-$0.30', detail: 'Sponsored transaction', positive: false },
-            ].map((txn) => (
-              <div key={txn.label} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+        <div className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-6 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Timeline</p>
+          <div className="space-y-3">
+            {wallet.transactions.map((txn) => (
+              <div key={txn.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
                 <div>
                   <p className="font-medium text-white">{txn.label}</p>
                   <p className="text-xs text-white/50">{txn.detail}</p>
                 </div>
-                <span className={`${txn.positive ? 'text-mint' : 'text-sunset'} font-semibold`}>{txn.amount}</span>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-2xl border border-ocean/30 bg-ocean/10 px-4 py-3 text-xs text-ocean">
-            Zero gas fees • Paymaster covers Ethereum costs using USDC-as-gas
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: 'existing-deposit',
-    eyebrow: 'Deposit flows',
-    title: 'Seamless deposits for US residents',
-    description: 'Users can ramp via bank ACH or saved cards. Estimated INR value appears instantly.',
-    accent: 'from-mint via-brand-500 to-ocean',
-    content: (
-      <div className="grid gap-5 lg:grid-cols-[1.2fr,1fr]">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/70">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Deposit amount</p>
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-lg font-semibold text-white">
-              $2,000.00
-            </div>
-            <div className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-lg font-semibold text-white/80">
-              ₹165,600.00
-            </div>
-          </div>
-          <p className="mt-3 text-xs text-white/50">Live FX locked for 60 seconds.</p>
-          <div className="mt-6 grid gap-3 md:grid-cols-2">
-            {[
-              { title: 'ACH via JP Morgan', subtitle: 'Arrives in < 5 min', accent: 'bg-mint/20 text-mint' },
-              { title: 'Visa •••• 7382', subtitle: 'Instant settlement', accent: 'bg-ocean/20 text-ocean' },
-            ].map((method) => (
-              <div key={method.title} className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <p className="text-sm font-semibold text-white">{method.title}</p>
-                <p className="text-xs text-white/50">{method.subtitle}</p>
-                <span className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-[0.2em] ${method.accent}`}>
-                  Preferred
+                <span
+                  className={clsx('font-semibold', txn.amount >= 0 ? 'text-mint' : 'text-sunset')}
+                >
+                  {formatCurrency(Math.abs(txn.amount), txn.currency)}
                 </span>
               </div>
             ))}
           </div>
-        </div>
-        <div className="rounded-3xl border border-white/10 bg-black/30 p-6 text-sm text-white/70">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Settlement summary</p>
-          <ul className="mt-4 space-y-3">
-            {[
-              'USDC minted to self-custody smart wallet',
-              'Funds available instantly for India payouts',
-              'Compliance receipts sent via email',
-            ].map((item) => (
-              <li key={item} className="flex items-start gap-3">
-                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-mint"></span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-          <button className="mt-6 w-full rounded-xl bg-gradient-to-r from-mint via-ocean to-brand-500 py-3 text-sm font-semibold text-white shadow-[0_18px_45px_-15px_rgba(52,211,153,0.6)]">
-            Confirm deposit
-          </button>
+          <p className="rounded-xl border border-ocean/30 bg-ocean/10 px-4 py-3 text-xs text-ocean">
+            Zero gas fees — OwlPay Paymaster sponsors Ethereum costs with USDC as gas.
+          </p>
         </div>
       </div>
-    ),
-  },
-  {
-    id: 'existing-send',
-    eyebrow: 'Send to India',
-    title: 'High-limit transfers with saved contacts',
-    description: 'Existing users can send up to $10,000 per transfer with instant INR availability for beneficiaries.',
-    accent: 'from-brand-500 via-sunset to-ocean',
-    content: (
-      <div className="grid gap-6 xl:grid-cols-[1.4fr,1fr]">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Recipient</p>
-          <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-sm text-white/70">
-            <div>
-              <p className="text-lg font-semibold text-white">Rohan Patel</p>
-              <p className="text-xs text-white/50">+91 99888 11223</p>
+    </StepShell>
+  )
+}
+
+function SendStep({ state, setState, goPrev }: StepProps<NewUserState>) {
+  const { recipient, amount, note, notification, error, successBanner } = state.send
+  const walletLimit = state.wallet.limit === 'intro' ? 5 : 10000
+
+  function handleSend() {
+    const numeric = Number(amount)
+    if (!recipient || !phoneRegex.test(recipient)) {
+      setState((prev) => ({
+        ...prev,
+        send: {
+          ...prev.send,
+          error: 'Enter a valid recipient mobile number with country code.',
+          successBanner: undefined,
+        },
+      }))
+      return
+    }
+    if (!numeric || numeric <= 0) {
+      setState((prev) => ({
+        ...prev,
+        send: {
+          ...prev.send,
+          error: 'Add an amount greater than $0.',
+          successBanner: undefined,
+        },
+      }))
+      return
+    }
+    if (numeric > walletLimit) {
+      setState((prev) => ({
+        ...prev,
+        send: {
+          ...prev.send,
+          error: `Limit is $${walletLimit.toLocaleString()} for this recipient right now.`,
+          successBanner: undefined,
+        },
+      }))
+      return
+    }
+
+    const notificationCopy = `You just received $${numeric.toFixed(2)} from ${state.phone}. Tap the link to create your OwlPay wallet and claim within 48 hours.`
+
+    setState((prev) => ({
+      ...prev,
+      wallet: {
+        ...prev.wallet,
+        balance: Math.max(prev.wallet.balance - numeric, 0),
+        limit: prev.wallet.limit === 'intro' ? 'full' : prev.wallet.limit,
+        transactions: [
+          {
+            id: `txn-${Date.now()}`,
+            label: `Transfer to ${recipient}`,
+            amount: -numeric,
+            currency: 'USD',
+            detail: 'Demo transfer • instantly settled',
+            channel: 'transfer',
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          },
+          ...prev.wallet.transactions,
+        ].slice(0, 6),
+      },
+      send: {
+        recipient: prev.send.recipient,
+        amount: '',
+        note: '',
+        notification: { channel: 'sms', copy: notificationCopy },
+        error: undefined,
+        successBanner: `Sent $${numeric.toFixed(2)} to ${recipient}. Intro limit unlocked to $10,000 for future payouts.`,
+      },
+    }))
+  }
+
+  function applyContact(contact: Contact) {
+    setState((prev) => ({
+      ...prev,
+      send: {
+        ...prev.send,
+        recipient: contact.phone,
+        note: `${contact.relationship} payout`,
+        error: undefined,
+      },
+    }))
+  }
+
+  return (
+    <StepShell
+      accent="new"
+      title="Send with guardrails"
+      description="Supports contact book quick-fill and intro limits before unlocking $10k payouts."
+    >
+      <div className="grid gap-6 xl:grid-cols-[1.2fr,1fr]">
+        <div className="space-y-4">
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Recipient mobile</span>
+            <input
+              value={recipient}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  send: { ...prev.send, recipient: event.target.value, error: undefined },
+                }))
+              }
+              placeholder="+91 90000 22111"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-ocean focus:outline-none"
+            />
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Amount (USD)</span>
+            <input
+              value={amount}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  send: {
+                    ...prev.send,
+                    amount: event.target.value.replace(/[^0-9.]/g, ''),
+                    error: undefined,
+                  },
+                }))
+              }
+              placeholder="$5"
+              inputMode="decimal"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-ocean focus:outline-none"
+            />
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Note (optional)</span>
+            <input
+              value={note}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  send: { ...prev.send, note: event.target.value },
+                }))
+              }
+              placeholder="Dinner reimbursement"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-ocean focus:outline-none"
+            />
+          </label>
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full bg-sunset/20 px-3 py-2 text-sunset">Intro limit • $5 to new recipients</span>
+            <span className="rounded-full bg-mint/20 px-3 py-2 text-mint">After delivery • $10,000</span>
+          </div>
+          {error && <p className="text-sm text-sunset">{error}</p>}
+          {successBanner && (
+            <p className="rounded-xl border border-mint/40 bg-mint/10 px-4 py-3 text-sm text-mint">{successBanner}</p>
+          )}
+          <div className="flex items-center justify-between text-sm text-white/60">
+            <button onClick={goPrev} className="underline decoration-dotted underline-offset-4 hover:text-white">
+              ← Back to wallet
+            </button>
+            <button
+              onClick={handleSend}
+              className="rounded-xl bg-gradient-to-r from-sunset via-brand-500 to-ocean px-6 py-3 font-semibold text-white shadow-[0_22px_45px_-20px_rgba(251,113,133,0.6)]"
+            >
+              Send now
+            </button>
+          </div>
+          {notification && (
+            <div className="rounded-2xl border border-mint/40 bg-mint/10 p-4 text-sm text-mint">
+              <p className="text-xs uppercase tracking-[0.3em] text-mint/80">Recipient notification</p>
+              <p className="mt-2 leading-relaxed">“{notification.copy}”</p>
+              <p className="mt-3 rounded-xl border border-mint/30 bg-black/30 px-4 py-2 text-xs text-mint/80">
+                Delivered over SMS & WhatsApp with deep link into the mobile web app.
+              </p>
             </div>
-            <span className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white/50">Saved</span>
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-lg font-semibold text-white">$7,500.00</div>
-            <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-lg font-semibold text-white/80">₹620,625.00</div>
-          </div>
-          <p className="mt-3 text-xs text-white/50">Remaining daily limit: <span className="text-white">$2,500.00</span></p>
-          <div className="mt-6 space-y-3">
-            {[
-              'Compliance cleared • Aadhaar verified',
-              'Bank account auto-filled from contact book',
-              'Recipient notified instantly with WhatsApp deep link',
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3 text-sm text-white/70">
-                <span className="h-2.5 w-2.5 rounded-full bg-ocean"></span>
-                <span>{item}</span>
-              </div>
+          )}
+        </div>
+        <aside className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-5 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Contact book</p>
+          <div className="space-y-3">
+            {contactBook.map((contact) => (
+              <button
+                key={contact.phone}
+                onClick={() => applyContact(contact)}
+                className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-ocean hover:text-white"
+              >
+                <div>
+                  <p className="font-semibold text-white">{contact.name}</p>
+                  <p className="text-xs text-white/50">{contact.phone}</p>
+                </div>
+                <span className="text-xs uppercase tracking-[0.3em] text-white/40">{contact.country}</span>
+              </button>
             ))}
           </div>
-          <button className="mt-6 w-full rounded-xl bg-gradient-to-r from-sunset via-brand-500 to-ocean py-3 text-sm font-semibold text-white shadow-[0_18px_45px_-12px_rgba(251,113,133,0.6)]">
-            Send now
-          </button>
-        </div>
-        <div className="flex flex-col gap-4">
-          <div className="rounded-3xl border border-white/10 bg-black/30 p-5 text-sm text-white/70">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/50">Contact book</p>
-            <div className="mt-3 space-y-3">
-              {contactBook.map((contact) => (
-                <div key={contact.phone} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <div>
-                    <p className="font-semibold text-white">{contact.name}</p>
-                    <p className="text-xs text-white/50">{contact.phone}</p>
-                  </div>
-                  <span className="text-xs uppercase tracking-[0.2em] text-white/40">{contact.country}</span>
+          <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/60">
+            Payout links auto-expire in 48 hours. Recipients complete onboarding on their device with 30-second KYC.
+          </div>
+        </aside>
+      </div>
+    </StepShell>
+  )
+}
+
+const newSteps: StepDefinition<NewUserState>[] = [
+  {
+    id: 'phone',
+    label: 'Mobile',
+    blurb: 'Collect number + send OTP',
+    component: PhoneCaptureStep,
+  },
+  {
+    id: 'otp',
+    label: 'OTP',
+    blurb: 'Verify code',
+    component: OTPStep,
+  },
+  {
+    id: 'profile',
+    label: 'Profile',
+    blurb: 'Personal info',
+    component: ProfileStep,
+  },
+  {
+    id: 'kyc-docs',
+    label: 'Documents',
+    blurb: 'Capture & submit',
+    component: KYCCaptureStep,
+  },
+  {
+    id: 'kyc-status',
+    label: 'Review',
+    blurb: 'Approve / retry',
+    component: KYCOutcomeStep,
+  },
+  {
+    id: 'wallet',
+    label: 'Wallet',
+    blurb: 'Balance + cards',
+    component: (props) => <WalletOverviewStep {...props} goPrev={() => {}} />,
+  },
+  {
+    id: 'send',
+    label: 'Send',
+    blurb: 'Transfer with guardrails',
+    component: SendStep,
+  },
+]
+function ExistingWalletStep({ state, goNext }: StepProps<ExistingUserState>) {
+  const wallet = state.wallet
+
+  return (
+    <StepShell
+      accent="existing"
+      title="Wallet home"
+      description="Returning users land on balance, quick actions, and FX insights."
+    >
+      <div className="grid gap-6 lg:grid-cols-[1.4fr,1fr]">
+        <div className="space-y-6 rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/50">Balance</p>
+              <p className="mt-2 text-4xl font-bold text-white">{formatCurrency(wallet.balance, 'USD')}</p>
+              <p className="text-xs text-white/50">USDC • Layer 2</p>
+            </div>
+            <div className="text-right text-xs text-white/60">
+              <p>Live FX ₹{wallet.fxRate}</p>
+              <p>Zero gas fees</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-sm font-semibold">
+            {['Deposit', 'Send', 'Receive'].map((action, index) => (
+              <button
+                key={action}
+                onClick={() => goNext()}
+                className={clsx(
+                  'rounded-2xl py-3 transition',
+                  index === 0
+                    ? 'bg-gradient-to-r from-ocean via-mint to-brand-500 text-white shadow-[0_18px_40px_-18px_rgba(34,211,238,0.7)]'
+                    : 'border border-white/10 bg-white/5 text-white hover:bg-white/10',
+                )}
+              >
+                {action}
+              </button>
+            ))}
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white/70">
+            <p className="text-xs uppercase tracking-[0.3em] text-white/50">Cards on file</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {wallet.cards.map((card) => (
+                <div key={card.last4} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <p className="text-sm font-semibold text-white">{card.brand} •••• {card.last4}</p>
+                  <p className="text-xs text-white/50">{card.autopay ? 'Instant autoload' : 'Manual top-up'}</p>
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-3xl border border-emerald-400/30 bg-emerald-400/10 p-5 text-sm text-emerald-100">
-            <p className="text-xs uppercase tracking-[0.2em] text-emerald-200">WhatsApp confirmation</p>
-            <p className="mt-3 leading-relaxed">
-              “OwlPay: <span className="font-semibold text-emerald-200">$7,500</span> is on its way from <span className="font-semibold text-emerald-200">Sarah Lee</span>. Claim to your INR wallet instantly.”
-            </p>
+        </div>
+        <div className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-6 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Recent activity</p>
+          <div className="space-y-3">
+            {wallet.transactions.map((txn) => (
+              <div key={txn.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                <div>
+                  <p className="font-medium text-white">{txn.label}</p>
+                  <p className="text-xs text-white/50">{txn.detail}</p>
+                </div>
+                <span className={clsx('font-semibold', txn.amount >= 0 ? 'text-mint' : 'text-sunset')}>
+                  {formatCurrency(Math.abs(txn.amount), txn.currency)}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-xl border border-ocean/30 bg-ocean/10 px-4 py-3 text-xs text-ocean">
+            Paymaster covers Ethereum fees — no gas deduction from the user.
           </div>
         </div>
       </div>
-    ),
-  },
-]
-
-const flows: Record<FlowKey, { label: string; blurb: string; screens: Screen[] }> = {
-  new: {
-    label: 'New user journey',
-    blurb: 'Guided onboarding for first-time users moving money between the US and India.',
-    screens: newUserScreens,
-  },
-  existing: {
-    label: 'Existing user workspace',
-    blurb: 'Returning users with verified KYC jump straight into high-limit remittances.',
-    screens: existingScreens,
-  },
+    </StepShell>
+  )
 }
 
-function ScreenCard({ eyebrow, title, description, accent, content }: Screen) {
+function DepositStep({ state, setState, goPrev, goNext }: StepProps<ExistingUserState>) {
+  const deposit = state.deposit
+  const [info, setInfo] = useState<string | null>(null)
+
+  function simulateDeposit() {
+    if (!deposit.amount) {
+      setInfo('Enter an amount to start the deposit flow.')
+      return
+    }
+    setState((prev) => ({
+      ...prev,
+      deposit: { ...prev.deposit, status: 'processing' },
+    }))
+    setInfo('ACH initiated — funds settle in 2 minutes via Circle ramp.')
+    setTimeout(() => {
+      setState((prev) => ({
+        ...prev,
+        wallet: {
+          ...prev.wallet,
+          balance: prev.wallet.balance + Number(deposit.amount),
+          transactions: [
+            {
+              id: `dep-${Date.now()}`,
+              label: `${deposit.method.toUpperCase()} deposit`,
+              amount: Number(deposit.amount),
+              currency: 'USD',
+              detail: 'Instant ramp completed',
+              channel: deposit.method,
+              time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            },
+            ...prev.wallet.transactions,
+          ].slice(0, 6),
+        },
+        deposit: { ...prev.deposit, status: 'completed' },
+      }))
+      setInfo('Deposit completed — wallet balance updated.')
+    }, 1000)
+  }
+
   return (
-    <article className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#07070b]/90 p-7 shadow-[0_35px_80px_-40px_rgba(8,112,255,0.4)]">
-      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent}`} />
-      <div className="space-y-5">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">{eyebrow}</p>
-          <h3 className="mt-2 text-2xl font-semibold text-white">{title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-white/60">{description}</p>
+    <StepShell
+      accent="existing"
+      title="Deposit"
+      description="Ramp via ACH or saved cards with instant INR estimation."
+    >
+      <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr]">
+        <div className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="space-y-2 text-sm">
+              <span className="text-xs uppercase tracking-[0.3em] text-white/50">Amount (USD)</span>
+              <input
+                value={deposit.amount}
+                onChange={(event) =>
+                  setState((prev) => ({
+                    ...prev,
+                    deposit: {
+                      ...prev.deposit,
+                      amount: event.target.value.replace(/[^0-9.]/g, ''),
+                      status: 'idle',
+                    },
+                  }))
+                }
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-ocean focus:outline-none"
+                placeholder="2000"
+                inputMode="decimal"
+              />
+            </label>
+            <label className="space-y-2 text-sm">
+              <span className="text-xs uppercase tracking-[0.3em] text-white/50">Estimated INR</span>
+              <input
+                value={deposit.estimation}
+                readOnly
+                className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-base text-white"
+              />
+            </label>
+          </div>
+          <div className="flex gap-3 text-sm">
+            {['ach', 'card'].map((method) => (
+              <button
+                key={method}
+                onClick={() =>
+                  setState((prev) => ({
+                    ...prev,
+                    deposit: { ...prev.deposit, method: method as ExistingUserState['deposit']['method'] },
+                  }))
+                }
+                className={clsx(
+                  'flex-1 rounded-xl border px-4 py-3 transition',
+                  deposit.method === method
+                    ? 'border-mint/60 bg-mint/10 text-white'
+                    : 'border-white/10 bg-white/5 text-white/70 hover:text-white',
+                )}
+              >
+                {method === 'ach' ? 'ACH • 0% fee' : 'Card • 1.2% fee'}
+              </button>
+            ))}
+          </div>
+          {info && <p className="text-sm text-mint">{info}</p>}
+          <div className="flex items-center justify-between text-sm text-white/60">
+            <button onClick={goPrev} className="underline decoration-dotted underline-offset-4 hover:text-white">
+              ← Back
+            </button>
+            <button
+              onClick={simulateDeposit}
+              className="rounded-xl bg-gradient-to-r from-ocean via-mint to-brand-500 px-6 py-3 font-semibold text-white"
+            >
+              Start deposit
+            </button>
+          </div>
         </div>
-        <div className="relative rounded-[24px] border border-white/5 bg-gradient-to-br from-white/5 via-white/2 to-transparent p-5">
-          {content}
-          <div className="pointer-events-none absolute inset-0 rounded-[24px] border border-white/10"></div>
+        <div className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-5 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Method comparison</p>
+          <div className="space-y-3">
+            {[
+              { label: 'ACH ramp', speed: 'Instant', fee: '0%', limits: '$25k/day' },
+              { label: 'Card top up', speed: 'Instant', fee: '1.2%', limits: '$5k/day' },
+            ].map((option) => (
+              <div key={option.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-white">{option.label}</p>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">{option.speed}</span>
+                </div>
+                <p className="mt-2 text-xs text-white/60">Fee {option.fee} • Limit {option.limits}</p>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/60">
+            INR estimate updates every second from XE feed. Locks for 60 seconds once user confirms.
+          </div>
         </div>
       </div>
-    </article>
+    </StepShell>
+  )
+}
+function ExistingSendStep({ state, setState, goPrev, goNext }: StepProps<ExistingUserState>) {
+  const { recipient, amount, note, error, successBanner } = state.send
+
+  function sendMoney() {
+    const numeric = Number(amount)
+    if (!recipient || !phoneRegex.test(recipient)) {
+      setState((prev) => ({
+        ...prev,
+        send: { ...prev.send, error: 'Enter a valid recipient number.', successBanner: undefined },
+      }))
+      return
+    }
+    if (!numeric || numeric <= 0) {
+      setState((prev) => ({
+        ...prev,
+        send: { ...prev.send, error: 'Amount must be greater than $0.', successBanner: undefined },
+      }))
+      return
+    }
+    setState((prev) => ({
+      ...prev,
+      wallet: {
+        ...prev.wallet,
+        balance: Math.max(prev.wallet.balance - numeric, 0),
+        transactions: [
+          {
+            id: `send-${Date.now()}`,
+            label: `Transfer to ${recipient}`,
+            amount: -numeric,
+            currency: 'USD',
+            detail: 'High-limit user • instant settlement',
+            channel: 'transfer',
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          },
+          ...prev.wallet.transactions,
+        ].slice(0, 6),
+      },
+      send: {
+        recipient,
+        amount: '',
+        note: '',
+        error: undefined,
+        successBanner: `Sent $${numeric.toFixed(2)} to ${recipient}. Recipient receives INR claim link immediately.`,
+      },
+    }))
+    goNext()
+  }
+
+  function pickContact(contact: Contact) {
+    setState((prev) => ({
+      ...prev,
+      send: { ...prev.send, recipient: contact.phone, note: `${contact.relationship} payout`, error: undefined },
+    }))
+  }
+
+  return (
+    <StepShell
+      accent="existing"
+      title="Send"
+      description="Existing users can send up to $10k instantly with trusted contacts pre-filled."
+    >
+      <div className="grid gap-6 xl:grid-cols-[1.2fr,1fr]">
+        <div className="space-y-4">
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Recipient</span>
+            <input
+              value={recipient}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  send: { ...prev.send, recipient: event.target.value, error: undefined },
+                }))
+              }
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-mint focus:outline-none"
+              placeholder="+91 98765 43210"
+            />
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Amount (USD)</span>
+            <input
+              value={amount}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  send: { ...prev.send, amount: event.target.value.replace(/[^0-9.]/g, ''), error: undefined },
+                }))
+              }
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-mint focus:outline-none"
+              placeholder="3500"
+              inputMode="decimal"
+            />
+          </label>
+          <label className="space-y-2 text-sm">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/50">Note</span>
+            <input
+              value={note}
+              onChange={(event) =>
+                setState((prev) => ({
+                  ...prev,
+                  send: { ...prev.send, note: event.target.value },
+                }))
+              }
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-mint focus:outline-none"
+              placeholder="Invoice OWL-448"
+            />
+          </label>
+          {error && <p className="text-sm text-sunset">{error}</p>}
+          {successBanner && <p className="rounded-xl border border-mint/40 bg-mint/10 px-4 py-3 text-sm text-mint">{successBanner}</p>}
+          <div className="flex items-center justify-between text-sm text-white/60">
+            <button onClick={goPrev} className="underline decoration-dotted underline-offset-4 hover:text-white">
+              ← Back
+            </button>
+            <button
+              onClick={sendMoney}
+              className="rounded-xl bg-gradient-to-r from-ocean via-mint to-brand-500 px-6 py-3 font-semibold text-white"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+        <aside className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-5 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Suggested contacts</p>
+          <div className="space-y-3">
+            {contactBook.map((contact) => (
+              <button
+                key={contact.phone}
+                onClick={() => pickContact(contact)}
+                className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-mint hover:text-white"
+              >
+                <div>
+                  <p className="font-semibold text-white">{contact.name}</p>
+                  <p className="text-xs text-white/50">{contact.phone}</p>
+                </div>
+                <span className="text-xs uppercase tracking-[0.3em] text-white/40">{contact.country}</span>
+              </button>
+            ))}
+          </div>
+          <div className="rounded-xl border border-mint/40 bg-mint/10 px-4 py-3 text-xs text-mint">
+            WhatsApp and SMS claim links trigger immediately with pre-filled onboarding for the recipient.
+          </div>
+        </aside>
+      </div>
+    </StepShell>
+  )
+}
+
+function ReceiveStep({ state, setState, goPrev }: StepProps<ExistingUserState>) {
+  const { linkCopied } = state.receive
+
+  function copyLink() {
+    setState((prev) => ({
+      ...prev,
+      receive: { linkCopied: true },
+    }))
+  }
+
+  return (
+    <StepShell
+      accent="existing"
+      title="Receive"
+      description="Generate INR wallet QR and shareable link for USDC off-ramps."
+    >
+      <div className="grid gap-6 md:grid-cols-[1.2fr,1fr]">
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <p className="text-xs uppercase tracking-[0.3em] text-white/50">Your INR wallet</p>
+            <p className="mt-2 text-2xl font-semibold text-white">OWL-9934</p>
+            <p className="text-sm text-white/60">Accept up to ₹10 lakh / day with instant FX lock.</p>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-black/40 p-4 text-sm text-white/70">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/40">QR mode</p>
+                <p className="mt-2">Scan to claim in under 30 seconds.</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/40 p-4 text-sm text-white/70">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/40">Link mode</p>
+                <p className="mt-2">Shareable deep link with WhatsApp preview.</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-sm text-white/60">
+            <button onClick={goPrev} className="underline decoration-dotted underline-offset-4 hover:text-white">
+              ← Back
+            </button>
+            <button
+              onClick={copyLink}
+              className="rounded-xl bg-gradient-to-r from-ocean via-mint to-brand-500 px-6 py-3 font-semibold text-white"
+            >
+              {linkCopied ? 'Link copied!' : 'Copy receive link'}
+            </button>
+          </div>
+        </div>
+        <aside className="space-y-3 rounded-2xl border border-white/10 bg-black/40 p-5 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Link preview</p>
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-xs text-white/70">
+            <p>
+              “Claim ₹ instantly from OwlPay. Tap to authenticate with your Aadhaar-linked mobile number. Link expires in 48 hours.”
+            </p>
+          </div>
+          <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/60">
+            Supports bank transfers to HDFC, ICICI, SBI, and 20+ partners. Instant UPI credit for verified recipients.
+          </p>
+        </aside>
+      </div>
+    </StepShell>
+  )
+}
+
+const existingSteps: StepDefinition<ExistingUserState>[] = [
+  {
+    id: 'wallet',
+    label: 'Wallet',
+    blurb: 'Balance overview',
+    component: (props) => <ExistingWalletStep {...props} goPrev={() => {}} />,
+  },
+  {
+    id: 'deposit',
+    label: 'Deposit',
+    blurb: 'Ramp funds',
+    component: DepositStep,
+  },
+  {
+    id: 'send',
+    label: 'Send',
+    blurb: 'High-limit transfer',
+    component: ExistingSendStep,
+  },
+  {
+    id: 'receive',
+    label: 'Receive',
+    blurb: 'Generate claim link',
+    component: ReceiveStep,
+  },
+]
+function StepRail<State>({
+  flow,
+  steps,
+  activeIndex,
+  setActiveIndex,
+}: {
+  flow: FlowKey
+  steps: StepDefinition<State>[]
+  activeIndex: number
+  setActiveIndex: (index: number) => void
+}) {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white/70">
+      <p className="text-xs uppercase tracking-[0.3em] text-white/40">Journey</p>
+      <ul className="mt-4 space-y-2">
+        {steps.map((step, index) => {
+          const active = index === activeIndex
+          return (
+            <li key={step.id}>
+              <button
+                onClick={() => setActiveIndex(index)}
+                className={clsx(
+                  'w-full rounded-2xl border px-4 py-3 text-left transition',
+                  active
+                    ? `border-transparent bg-gradient-to-r ${gradientByFlow[flow]} text-white shadow-[0_20px_45px_-25px_rgba(34,211,238,0.7)]`
+                    : 'border-white/10 bg-black/40 text-white/60 hover:border-white/20 hover:text-white',
+                )}
+              >
+                <p className="text-sm font-semibold">{step.label}</p>
+                <p className="text-xs text-white/60">{step.blurb}</p>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 
 export default function CrossBorderMVP() {
   const [selectedFlow, setSelectedFlow] = useState<FlowKey>('new')
-  const flow = useMemo(() => flows[selectedFlow], [selectedFlow])
+  const [newStepIndex, setNewStepIndex] = useState(0)
+  const [existingStepIndex, setExistingStepIndex] = useState(0)
+  const [newState, setNewState] = useState<NewUserState>(newInitialState)
+  const [existingState, setExistingState] = useState<ExistingUserState>(existingInitialState)
+
+  const flowMeta = headingByFlow[selectedFlow]
+  const { steps, state, setState, activeIndex, setActiveIndex } = useMemo(() => {
+    if (selectedFlow === 'new') {
+      return {
+        steps: newSteps,
+        state: newState,
+        setState: setNewState,
+        activeIndex: newStepIndex,
+        setActiveIndex: setNewStepIndex,
+      }
+    }
+    return {
+      steps: existingSteps,
+      state: existingState,
+      setState: setExistingState,
+      activeIndex: existingStepIndex,
+      setActiveIndex: setExistingStepIndex,
+    }
+  }, [selectedFlow, newState, existingState, newStepIndex, existingStepIndex])
+
+  const ActiveStep = steps[activeIndex]?.component
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#050509] text-white">
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute -top-32 left-1/2 h-[540px] w-[540px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_top,#8b5cf640,transparent_65%)] blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 h-[460px] w-[460px] translate-x-[-30%] translate-y-[30%] rounded-full bg-[radial-gradient(circle_at_bottom,#22d3ee30,transparent_70%)] blur-3xl"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_bottom,#34d39930,transparent_70%)] blur-3xl"></div>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -top-32 left-1/2 h-[540px] w-[540px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_top,#8b5cf640,transparent_65%)] blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-[460px] w-[460px] translate-x-[-30%] translate-y-[30%] rounded-full bg-[radial-gradient(circle_at_bottom,#22d3ee30,transparent_70%)] blur-3xl" />
+        <div className="absolute bottom-[-20%] right-[-10%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_bottom,#34d39930,transparent_70%)] blur-3xl" />
       </div>
-      <section className="relative z-10 mx-auto flex max-w-7xl flex-col gap-16 px-6 pb-24 pt-20">
+      <section className="relative z-10 mx-auto flex max-w-6xl flex-col gap-12 px-6 pb-24 pt-20">
         <header className="space-y-8">
           <div className="flex flex-wrap items-center justify-between gap-6">
             <div className="space-y-4">
@@ -593,59 +1541,78 @@ export default function CrossBorderMVP() {
                   🇮🇳
                 </span>
               </p>
-              <h1 className="text-4xl font-semibold md:text-5xl">Cross-border Payments MVP</h1>
-              <p className="max-w-2xl text-base text-white/70">
-                Showcase flows for launching OwlPay’s compliant corridor between the United States and India. Toggle between the new
-                user onboarding journey and the high-limit experience for returning customers.
-              </p>
+              <h1 className="text-4xl font-semibold md:text-5xl">Cross-border payments MVP</h1>
+              <p className="max-w-2xl text-base text-white/70">{flowMeta.intro}</p>
             </div>
             <div className="flex flex-col items-start gap-4 rounded-[32px] border border-white/10 bg-white/5 p-6 text-sm text-white/70 md:max-w-sm">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/50">Quick links</p>
-              <Link href="/start" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 via-ocean to-mint px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow-[0_15px_40px_-12px_rgba(139,92,246,0.7)]">
-                Try interactive demo →
+              <p className="text-xs uppercase tracking-[0.3em] text-white/50">Quick links</p>
+              <Link
+                href="/start"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 via-ocean to-mint px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow-[0_15px_40px_-12px_rgba(139,92,246,0.7)]"
+              >
+                Launch guided demo →
               </Link>
-              <Link href="/dashboard" className="text-xs uppercase tracking-[0.3em] text-white/60 underline decoration-dotted underline-offset-4">
-                View dashboard prototype
+              <Link
+                href="/dashboard"
+                className="text-xs uppercase tracking-[0.3em] text-white/60 underline decoration-dotted underline-offset-4"
+              >
+                Open wallet shell
               </Link>
-              <Link href="/whitepaper" className="text-xs uppercase tracking-[0.3em] text-white/60 underline decoration-dotted underline-offset-4">
+              <Link
+                href="/whitepaper"
+                className="text-xs uppercase tracking-[0.3em] text-white/60 underline decoration-dotted underline-offset-4"
+              >
                 Read the whitepaper
               </Link>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            {(Object.keys(flows) as FlowKey[]).map((key) => (
+            {(Object.keys(headingByFlow) as FlowKey[]).map((key) => (
               <button
                 key={key}
                 onClick={() => setSelectedFlow(key)}
-                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                className={clsx(
+                  'rounded-full px-5 py-2 text-sm font-semibold transition',
                   selectedFlow === key
                     ? 'bg-gradient-to-r from-brand-500 via-ocean to-mint text-white shadow-[0_12px_30px_-12px_rgba(34,211,238,0.7)]'
-                    : 'border border-white/10 bg-white/5 text-white/60 hover:text-white'
-                }`}
+                    : 'border border-white/10 bg-white/5 text-white/60 hover:text-white',
+                )}
               >
-                {flows[key].label}
+                {headingByFlow[key].title}
               </button>
             ))}
           </div>
-          <p className="max-w-2xl text-sm text-white/60">{flow.blurb}</p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {flowMeta.highlights.map((item) => (
+              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+                {item}
+              </div>
+            ))}
+          </div>
         </header>
-        <div className="grid gap-10 lg:grid-cols-2">
-          {flow.screens.map((screen) => (
-            <ScreenCard key={screen.id} {...screen} />
-          ))}
+        <div className="grid gap-6 lg:grid-cols-[1fr,2fr]">
+          <StepRail flow={selectedFlow} steps={steps} activeIndex={activeIndex} setActiveIndex={setActiveIndex} />
+          <div className="space-y-6">
+            {ActiveStep ? (
+              <ActiveStep
+                state={state as never}
+                setState={setState as never}
+                goNext={() => setActiveIndex(Math.min(activeIndex + 1, steps.length - 1))}
+                goPrev={() => setActiveIndex(Math.max(activeIndex - 1, 0))}
+              />
+            ) : (
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/70">
+                Select a step to preview the experience.
+              </div>
+            )}
+          </div>
         </div>
         <footer className="rounded-[32px] border border-white/10 bg-white/5 p-8 text-sm text-white/70">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Deployment</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Deployment</p>
           <p className="mt-3 max-w-2xl leading-relaxed">
-            This MVP is optimised for a Vercel static deployment. All flows are front-end driven so you can demo the onboarding and
-            remittance experience instantly.
+            This MVP is optimised for a Vercel static deployment. All flows are front-end driven so you can demo onboarding,
+            send limits, and payouts end-to-end without backend dependencies. Reload to reset the sandbox.
           </p>
-          <div className="mt-5 flex flex-wrap gap-3 text-xs uppercase tracking-[0.3em] text-white/50">
-            <span className="rounded-full border border-white/15 px-4 py-2">Stablecoins</span>
-            <span className="rounded-full border border-white/15 px-4 py-2">Self-custody</span>
-            <span className="rounded-full border border-white/15 px-4 py-2">KYC</span>
-            <span className="rounded-full border border-white/15 px-4 py-2">Paymaster</span>
-          </div>
         </footer>
       </section>
     </main>
