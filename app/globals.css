@@ -48,3 +48,18 @@ h2 { @apply text-2xl font-semibold; }
 }
 /* darker dots in dark mode */
 .dark .bg-grid { color: rgba(255, 255, 255, 0.05); }
+
+/* MVP theme overrides */
+.mvp-theme-light .text-white { color: #0f172a !important; }
+.mvp-theme-light .text-white\/80 { color: rgba(15, 23, 42, 0.85) !important; }
+.mvp-theme-light .text-white\/70 { color: rgba(15, 23, 42, 0.65) !important; }
+.mvp-theme-light .text-white\/60 { color: rgba(15, 23, 42, 0.55) !important; }
+.mvp-theme-light .text-white\/50 { color: rgba(15, 23, 42, 0.45) !important; }
+.mvp-theme-light .text-white\/40 { color: rgba(15, 23, 42, 0.35) !important; }
+.mvp-theme-light .border-white\/10 { border-color: rgba(148, 163, 184, 0.25) !important; }
+.mvp-theme-light .border-white\/5 { border-color: rgba(148, 163, 184, 0.18) !important; }
+.mvp-theme-light .bg-white\/10 { background-color: rgba(226, 232, 240, 0.6) !important; }
+.mvp-theme-light .bg-white\/5 { background-color: rgba(226, 232, 240, 0.4) !important; }
+.mvp-theme-light .bg-black\/40 { background-color: rgba(15, 23, 42, 0.08) !important; }
+.mvp-theme-light .bg-black\/30 { background-color: rgba(15, 23, 42, 0.06) !important; }
+.mvp-theme-light .shadow-black\/40 { box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.15) !important; }

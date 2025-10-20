@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function Landing() {
   const [darkMode, setDarkMode] = useState(true)
@@ -16,212 +16,163 @@ export default function Landing() {
 
   return (
     <main
-      className={`min-h-screen transition-all duration-700 ${
+      className={`min-h-screen transition-colors duration-500 ${
         darkMode
           ? 'bg-[#050509] text-white'
-          : 'bg-gradient-to-br from-[#f5f6fa] via-[#e6ecff] to-[#f7f9ff] text-gray-900'
-      } font-[Inter,sans-serif]`}
+          : 'bg-gradient-to-br from-[#f7f8fc] via-[#eef2ff] to-[#f5f8ff] text-slate-900'
+      }`}
     >
-      {/* Header */}
       <header
-        className={`flex items-center justify-between px-6 py-5 border-b ${
-          darkMode ? 'border-gray-800/50' : 'border-gray-300/40'
+        className={`border-b px-6 py-5 transition-colors ${
+          darkMode ? 'border-white/10' : 'border-slate-200/80'
         }`}
       >
-        <h1 className="text-xl font-bold tracking-tight">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8b5cf6] via-[#4f46e5] to-[#06b6d4]">
-            OwlPay
-          </span>
-        </h1>
-        <div className="flex items-center gap-6">
-          <Link href="#" className="hover:text-[#8b5cf6] transition">
-            Home
-          </Link>
-          <Link href="#" className="hover:text-[#8b5cf6] transition">
-            Whitepaper
-          </Link>
-          <Link
-            href="#"
-            className="px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#06b6d4] rounded-full font-medium text-white shadow-md hover:shadow-[0_0_25px_-5px_#8b5cf6] transition"
-          >
-            Launch App
-          </Link>
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className={`ml-3 p-2 rounded-md ${
-              darkMode
-                ? 'border border-gray-700 hover:bg-gray-800'
-                : 'border border-gray-400 hover:bg-gray-200'
-            } transition`}
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold tracking-[0.25em] text-ocean uppercase">OwlPay</p>
+            <h1 className="text-2xl font-semibold">US ⇄ India Stablecoin Banking</h1>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <button
+              onClick={() => setDarkMode((value) => !value)}
+              className={`rounded-full border px-4 py-2 transition ${
+                darkMode
+                  ? 'border-white/10 bg-white/10 text-white hover:bg-white/20'
+                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              {darkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
+            <Link
+              href="/start"
+              className="rounded-full bg-gradient-to-r from-brand-500 via-ocean to-mint px-5 py-2 text-sm font-semibold text-white shadow-[0_18px_35px_-20px_rgba(59,130,246,0.8)]"
+            >
+              View flow outline
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="text-center mt-20 px-6">
-        <h1 className="text-5xl sm:text-6xl font-extrabold leading-tight">
-          Cross-border remittance,{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8b5cf6] via-[#3b82f6] to-[#10b981]">
-            fast, compliant & elegant
-          </span>
-        </h1>
-        <p
-          className={`max-w-2xl mx-auto mt-6 text-lg ${
-            darkMode ? 'text-gray-400' : 'text-gray-600'
-          }`}
-        >
-          Move money between the US and India using stablecoins with KYC-gated
-          flows and bank-linked ramps. Designed for speed, trust, and
-          self-custody.
-        </p>
-
-        <div className="flex justify-center gap-4 mt-8">
-          <Link
-            href="#"
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-[#8b5cf6] via-[#6366f1] to-[#06b6d4] font-semibold hover:scale-105 hover:shadow-[0_0_20px_-5px_#7c3aed] transition"
-          >
-            Launch App
-          </Link>
-          <Link
-            href="#"
-            className={`px-6 py-3 rounded-full font-semibold border ${
-              darkMode
-                ? 'border-gray-600 hover:border-[#8b5cf6]'
-                : 'border-gray-400 hover:border-[#6366f1]'
-            } transition`}
-          >
-            Read Whitepaper
-          </Link>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="grid md:grid-cols-3 gap-6 px-6 mt-24 max-w-6xl mx-auto">
-        {[
-          {
-            title: "KYC’d & Fully Compliant",
-            points: [
-              'Only verified users',
-              'Permissioned flows',
-              'Jurisdiction rules',
-              'FIU compliant',
-            ],
-          },
-          {
-            title: 'On/Off Ramp',
-            points: [
-              'US on-ramp via Bridge',
-              'INR off-ramp via CoinDCX',
-              'Stablecoin rails',
-              'Secure fiat gateways',
-            ],
-          },
-          {
-            title: 'Paymaster UX',
-            points: [
-              'Account abstraction',
-              'No gas at checkout',
-              'USDC-as-gas model',
-              'Mobile-first simplicity',
-            ],
-          },
-        ].map(({ title, points }) => (
+      <section className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-20 pt-16">
+        <div className="grid items-center gap-12 md:grid-cols-[1.2fr,1fr]">
+          <div className="space-y-6">
+            <h2 className="text-4xl font-semibold md:text-5xl">
+              Cross-border remittance built for trust, compliance, and speed.
+            </h2>
+            <p className={`text-lg ${darkMode ? 'text-white/70' : 'text-slate-600'}`}>
+              OwlPay delivers a guided banking experience for the US ⇄ India corridor with progressive KYC, gasless USDC
+              rails, and beautifully choreographed deposit, send, and receive flows.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href="/mvp"
+                className="rounded-full bg-gradient-to-r from-brand-500 via-ocean to-mint px-6 py-3 text-base font-semibold text-white shadow-[0_24px_45px_-22px_rgba(59,130,246,0.75)]"
+              >
+                Launch Demo
+              </Link>
+              <Link
+                href="/whitepaper"
+                className={`rounded-full border px-6 py-3 text-base font-semibold transition ${
+                  darkMode
+                    ? 'border-white/20 text-white hover:bg-white/10'
+                    : 'border-slate-300 text-slate-700 hover:bg-white'
+                }`}
+              >
+                Read the whitepaper
+              </Link>
+            </div>
+          </div>
           <div
-            key={title}
-            className={`rounded-2xl p-6 border backdrop-blur-xl transition ${
+            className={`rounded-3xl border p-6 shadow-2xl transition ${
               darkMode
-                ? 'border-gray-800 bg-[#0e0e12]/70 hover:shadow-[0_0_25px_-5px_#7c3aed]'
-                : 'border-gray-300 bg-white/60 hover:shadow-[0_0_20px_-5px_#6366f1]'
+                ? 'border-white/10 bg-white/5'
+                : 'border-slate-200/80 bg-white/80 backdrop-blur'
             }`}
           >
-            <h3 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-[#8b5cf6] to-[#10b981]">
-              {title}
-            </h3>
-            <ul
-              className={`mt-3 space-y-1 ${
-                darkMode ? 'text-gray-400' : 'text-gray-700'
-              } text-sm`}
-            >
-              {points.map((p) => (
-                <li key={p}>• {p}</li>
+            <p className="text-xs uppercase tracking-[0.3em] text-ocean">Demo previews</p>
+            <ul className={`mt-4 space-y-4 text-sm ${darkMode ? 'text-white/70' : 'text-slate-600'}`}>
+              {[
+                'OTP capture, verification, and KYC review loops for risk sign-off.',
+                'Wallet shell with Visa & Mastercard tokens plus live FX updates.',
+                'Guarded $5 intro send limits that unlock to $10k after delivery.',
+              ].map((item) => (
+                <li
+                  key={item}
+                  className={`rounded-2xl border p-4 transition ${
+                    darkMode
+                      ? 'border-white/10 bg-black/20'
+                      : 'border-slate-200/80 bg-white/90 shadow-md'
+                  }`}
+                >
+                  {item}
+                </li>
               ))}
             </ul>
           </div>
-        ))}
-      </section>
+        </div>
 
-      {/* How It Works */}
-      <section className="px-6 mt-24 max-w-6xl mx-auto">
-        <h2 className="text-center text-3xl font-semibold mb-8">
-          How It Works
-        </h2>
-        <div className="grid md:grid-cols-4 gap-6">
+        <section className="grid gap-6 md:grid-cols-3">
           {[
-            ['1. Sign Up', 'Enter phone number (US/India) → OTP verification'],
-            ['2. Verify', 'Upload ID + proof of address. Auto-approve (demo)'],
-            ['3. Deposit', 'Add bank account and deposit USD'],
-            ['4. Send', 'Send funds instantly by mobile or contact'],
-          ].map(([step, desc]) => (
-            <div
-              key={step}
-              className={`p-5 rounded-2xl border backdrop-blur-xl ${
-                darkMode
-                  ? 'border-gray-800 bg-[#0e0e12]/70'
-                  : 'border-gray-300 bg-white/60'
+            {
+              title: 'Compliance obsessed',
+              copy: 'KYC-gated onboarding, OFAC screening, and FIU traceability across both jurisdictions.',
+            },
+            {
+              title: 'Real-time FX locks',
+              copy: 'Circle and CoinDCX liquidity for instant INR estimates, with paymaster-covered gas fees.',
+            },
+            {
+              title: 'Customer delight',
+              copy: 'Contact book payouts, WhatsApp-ready links, and adaptive limits create trust on day one.',
+            },
+          ].map((item) => (
+            <article
+              key={item.title}
+              className={`rounded-3xl border p-6 transition ${
+                darkMode ? 'border-white/10 bg-white/5' : 'border-slate-200/80 bg-white/90 shadow-lg'
               }`}
             >
-              <div className="text-lg font-semibold mb-1 text-[#8b5cf6]">
-                {step}
-              </div>
-              <p
-                className={`text-sm ${
-                  darkMode ? 'text-gray-400' : 'text-gray-700'
-                }`}
-              >
-                {desc}
+              <h3 className="text-xl font-semibold">{item.title}</h3>
+              <p className={`mt-3 text-sm leading-relaxed ${darkMode ? 'text-white/70' : 'text-slate-600'}`}>
+                {item.copy}
               </p>
-            </div>
+            </article>
           ))}
-        </div>
-      </section>
+        </section>
 
-      {/* Safety & Limits */}
-      <section className="px-6 mt-24 max-w-5xl mx-auto text-center">
-        <h2 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-[#10b981] to-[#3b82f6]">
-          Safety & Limits
-        </h2>
-        <ul
-          className={`mt-5 space-y-2 text-base ${
-            darkMode ? 'text-gray-300' : 'text-gray-700'
+        <section
+          className={`rounded-3xl border p-10 text-center transition ${
+            darkMode ? 'border-white/10 bg-gradient-to-r from-white/5 via-white/0 to-white/5' : 'border-slate-200/80 bg-white'
           }`}
         >
-          <li>✅ First transfer capped at <b>$5</b> for safety</li>
-          <li>💸 Daily limit up to <b>$10,000</b></li>
-          <li>🔒 All transactions validated & irreversible</li>
-          <li>🛡️ Privacy roadmap via MPC & zk-tech</li>
-        </ul>
+          <h3 className="text-3xl font-semibold">Experience the guided demo</h3>
+          <p className={`mt-4 text-base ${darkMode ? 'text-white/70' : 'text-slate-600'}`}>
+            Explore both the new customer and returning user journeys exactly as they would function in production.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
+            <Link
+              href="/start"
+              className={`rounded-full border px-6 py-3 text-base font-semibold transition ${
+                darkMode
+                  ? 'border-white/20 text-white hover:bg-white/10'
+                  : 'border-slate-300 text-slate-700 hover:bg-white'
+              }`}
+            >
+              Review the flow outline
+            </Link>
+            <Link
+              href="/whitepaper"
+              className={`rounded-full border px-6 py-3 text-base font-semibold transition ${
+                darkMode
+                  ? 'border-white/20 text-white hover:bg-white/10'
+                  : 'border-slate-300 text-slate-700 hover:bg-white'
+              }`}
+            >
+              Download the whitepaper
+            </Link>
+          </div>
+        </section>
       </section>
-
-      {/* CTA */}
-      <section className="text-center mt-24 mb-16">
-        <Link
-          href="#"
-          className="px-8 py-4 bg-gradient-to-r from-[#3b82f6] via-[#8b5cf6] to-[#ec4899] rounded-full font-semibold text-white shadow-lg hover:scale-110 transition"
-        >
-          🚀 Launch the Demo
-        </Link>
-      </section>
-
-      {/* Footer */}
-      <footer
-        className={`text-center text-sm pb-10 ${
-          darkMode ? 'text-gray-500' : 'text-gray-600'
-        }`}
-      >
-        © 2025 OwlPay — Cross-border stablecoin remittance demo.
-      </footer>
     </main>
   )
 }

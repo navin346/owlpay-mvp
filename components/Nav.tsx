@@ -11,8 +11,11 @@ export default function Nav() {
         <nav className="flex items-center gap-6 text-sm">
           <Link href="/" className="hover:text-teal-300">Home</Link>
           <Link href="/whitepaper" className="hover:text-teal-300">Whitepaper</Link>
-          <Link href="/launch" className="bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-2 rounded-full font-semibold">
-            Launch App
+          <Link
+            href="/mvp"
+            className="bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-2 rounded-full font-semibold"
+          >
+            Launch Demo
           </Link>
         </nav>
       </div>

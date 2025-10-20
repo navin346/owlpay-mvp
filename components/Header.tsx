@@ -10,6 +10,7 @@ export default function Header({ title = 'OwlPay Wallet' }: { title?: string }) 
         </Link>
         <nav className="flex items-center gap-4 text-sm">
           <Link href="/dashboard" className="hover:text-teal-300">Dashboard</Link>
+          <Link href="/mvp" className="hover:text-teal-300">MVP screens</Link>
           <Link href="/" className="hover:text-teal-300">Website</Link>
         </nav>
       </div>
