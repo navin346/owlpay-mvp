@@ -1,7 +1,9 @@
 'use client'
 
 import clsx from 'clsx'
+import Link from 'next/link'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { BrandMark } from '../../components/BrandMark'
 
 type FlowKey = 'new' | 'existing'
 
@@ -1587,10 +1589,32 @@ export default function CrossBorderMVP() {
           <div className="absolute bottom-[-20%] right-[-10%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_bottom,#34d39930,transparent_70%)] blur-3xl" />
         </div>
         <section className="relative z-10 mx-auto flex max-w-6xl flex-col gap-12 px-6 pb-24 pt-20">
-          <header className="space-y-8">
-            <div className="flex flex-wrap items-center justify-between gap-6">
+          <header className="space-y-10">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <BrandMark theme={isLight ? 'light' : 'dark'} />
+              <Link
+                href="/"
+                className={clsx(
+                  'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition',
+                  isLight
+                    ? 'border-slate-200/80 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                    : 'border-white/10 bg-white/10 text-white/70 hover:border-white/20 hover:text-white',
+                )}
+              >
+                <span aria-hidden="true">←</span>
+                Back to website
+              </Link>
+            </div>
+            <div className="flex flex-wrap items-start justify-between gap-6">
               <div className="space-y-4">
-                <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-white/70">
+                <p
+                  className={clsx(
+                    'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs uppercase tracking-[0.35em]',
+                    isLight
+                      ? 'border-slate-200/80 bg-white/70 text-slate-500'
+                      : 'border-white/10 bg-white/10 text-white/70',
+                  )}
+                >
                   <span role="img" aria-label="us flag">
                     🇺🇸
                   </span>
@@ -1600,11 +1624,16 @@ export default function CrossBorderMVP() {
                   </span>
                 </p>
                 <h1 className="text-4xl font-semibold md:text-5xl">Cross-border payments MVP</h1>
-                <p className="max-w-2xl text-base text-white/70">{flowMeta.intro}</p>
+                <p className={clsx('max-w-2xl text-base', isLight ? 'text-slate-600' : 'text-white/70')}>{flowMeta.intro}</p>
               </div>
               <button
                 onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-white/30 hover:text-white"
+                className={clsx(
+                  'inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition',
+                  isLight
+                    ? 'border border-slate-200/80 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                    : 'border border-white/10 bg-white/10 text-white/70 hover:border-white/30 hover:text-white',
+                )}
               >
                 {theme === 'dark' ? 'View in light mode' : 'View in dark mode'}
               </button>

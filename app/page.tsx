@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
+import { BrandMark } from '../components/BrandMark'
+
 export default function Landing() {
   const [darkMode, setDarkMode] = useState(true)
 
@@ -28,9 +30,12 @@ export default function Landing() {
         }`}
       >
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold tracking-[0.25em] text-ocean uppercase">OwlPay</p>
-            <h1 className="text-2xl font-semibold">US ⇄ India Stablecoin Banking</h1>
+          <div className="flex items-center gap-4">
+            <BrandMark theme={darkMode ? 'dark' : 'light'} />
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-ocean">US ⇄ India</p>
+              <h1 className="text-2xl font-semibold">Cross-border stablecoin banking</h1>
+            </div>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <button
